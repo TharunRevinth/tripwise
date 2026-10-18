@@ -1,21 +1,28 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Bricolage_Grotesque, Instrument_Sans, Caveat } from 'next/font/google';
 import './globals.css';
-import { ThemeProvider } from '@/components/ThemeProvider';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const bricolage = Bricolage_Grotesque({
   subsets: ['latin'],
+  variable: '--font-bricolage',
+  display: 'swap',
 });
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const instrument = Instrument_Sans({
   subsets: ['latin'],
+  variable: '--font-instrument',
+  display: 'swap',
+});
+
+const caveat = Caveat({
+  subsets: ['latin'],
+  variable: '--font-caveat',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
-  title: 'TripWise — Smart Travel Planner',
-  description: 'Full-Stack Travel Planning Application with Interactive 3D Earth, Real-Time Open-Meteo Weather, OpenRouter AI Generator, and Supabase Persistence.',
+  title: 'TripWise · plan the trip, pack the day',
+  description: 'Smart Travel Planner with Interactive 3D Globe, Real-Time Weather, AI Planner, and Route Estimates.',
   keywords: ['TripWise', 'Travel Planner', 'Full-Stack', 'Next.js', 'Supabase', 'Open-Meteo', 'Three.js'],
   authors: [{ name: 'AWS Student Builder Group Applicant' }],
 };
@@ -26,12 +33,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased selection:bg-sky-500 selection:text-white">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
-        </ThemeProvider>
-      </body>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${instrument.variable} ${bricolage.variable} ${caveat.variable}`}
+    >
+      <body>{children}</body>
     </html>
   );
 }

@@ -2,8 +2,8 @@
 
 [![Track](https://img.shields.io/badge/Track-3%3A%20Full--Stack-blue.svg)](https://github.com)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org)
-[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-v4-38bdf8)](https://tailwindcss.com)
-[![Three.js](https://img.shields.io/badge/Three.js-3D%20Globe-black)](https://threejs.org)
+[![React](https://img.shields.io/badge/React-19-61dafb)](https://react.dev)
+[![Three.js](https://img.shields.io/badge/Three.js-3D%20Globe%20%26%20Fox-black)](https://threejs.org)
 [![Supabase](https://img.shields.io/badge/Database-Supabase-3ecf8e)](https://supabase.com)
 [![Open-Meteo](https://img.shields.io/badge/Weather-Open--Meteo-ff7e67)](https://open-meteo.com)
 [![OpenRouter](https://img.shields.io/badge/AI-OpenRouter-6366f1)](https://openrouter.ai)
@@ -14,17 +14,46 @@
 ---
 
 ## 📌 Project Overview
-Planning a trip often involves searching across fragmented websites to discover places, compare options, and keep track of destinations worth visiting. **TripWise** makes this process effortless.
 
-**TripWise** is a full-stack, AI-enhanced travel planning application featuring:
-1. **Interactive 3D Earth Globe (Three.js):** Drag to rotate Earth, click glowing city pins (Chennai, Tokyo, Paris, New York, Rome, Bali) to filter destinations.
-2. **Destination Exploration:** Search, category filter (Historical, Nature, Dining, Landmarks, Entertainment, Culture), and sorting.
-3. **Live Weather Widget (Open-Meteo API):** Real-time temperature, condition, humidity, wind, and multi-day forecast for any destination without requiring an API key.
-4. **Itinerary Management:** Add destinations with custom notes and day assignments (Day 1, Day 2, etc.), mark as visited, export to Calendar (`.ics`), and print view.
-5. **Database Persistence (Supabase + Resilient Local Fallback):** Saved itinerary items are stored in Supabase with automatic local storage fallback for offline resilience.
-6. **AI Travel Concierge (OpenRouter):** Generates structured multi-day itineraries, packing tips, and local dining advice with 1-click import into your trip.
-7. **Interactive Trip Budget Estimator:** Multi-currency calculator (INR ₹, USD $, EUR €, GBP £) with visual breakdown for lodging, food, transit, and buffer.
-8. **Dark / Light Mode:** Smooth theme transitions with system preference detection.
+**TripWise** is a full-stack, AI-augmented travel planning application built with Next.js 15 App Router, React 19, and Three.js. It features a distinctive neo-brutalist bento design with hand-drawn accents, real-time Open-Meteo weather integration, geospatial 3D earth exploration with coordinate raycasting, OpenRouter multi-day AI itinerary generation, budget calculation, transit route estimation, and Supabase database persistence.
+
+---
+
+## ✨ Features & Architecture
+
+### 1. Discover Experience
+- **Neo-Brutalist Hero Bento:** Headline with self-drawing SVG squiggles, debounced search form, live count-up stats (`places` and `cities`), and animated AI shortcut.
+- **Interactive 3D Toon Globe (Three.js):** Custom toon-shaded 3-band sphere with land/water mask, drifting cloud clusters, orbiting animated Flamingo GLTF model, clickable raycaster pins, and flight camera arcs.
+- **Dynamic City Marquee:** Smooth continuous ticker of featured destinations with pause-on-hover.
+- **Filters & Sorting:** City chips, category filters (`Historical 🏛️`, `Nature 🌿`, `Food & Dining 🍜`, `Landmarks 🗼`, `Entertainment 🎭`, `Culture 🎨`), sort by top-rated or name, skeleton loaders, and empty/error states with retry.
+
+### 2. Slide-In Place Sheet
+- Accessible slide-in drawer with overlay, keyboard `Escape` dismissal, and focus trapping.
+- **Real-Time Weather Tile (Open-Meteo):** Live temperature, condition emoji, humidity, wind speed, and 5-day daily forecast with high/low temperatures.
+- **Bento Fact Tiles:** Best time to visit, price tiers (`$`, `$$`, `$$$`, `$$$$`), rating with review count, address, and OpenStreetMap direct link.
+- **Itinerary Add Form:** Select target day (1–10), prefilled cost per person, custom visit notes, or quick-removal if already saved.
+- **Contextual Recommendations:** "More in {city}" quick-links to nearby attractions.
+
+### 3. OpenRouter AI Planner
+- Form with city autocomplete datalist, trip duration (1–7 days), vibe/theme selector (*Culture & Heritage*, *Food & Markets*, *Nature & Outdoors*, *Relax & Beaches*, *Nightlife & Fun*, *Family Friendly*), and pace chips (*relaxed*, *moderate*, *packed*).
+- Animated progress bar loader while the AI crafts the multi-day schedule.
+- Output cards with time-of-day timeline spots, handwritten tips, and cost estimates.
+- **1-Click Add:** Add individual spots or an entire day into your itinerary, automatically matching known coordinates and tags.
+- Curated **"Pack this"** checklist and **"Eat this"** local delicacy recommendations.
+
+### 4. My Trip Itinerary & Route Estimator
+- **Day-by-Day Timeline:** Stops grouped by day with optional calendar dates derived from trip start date.
+- **Interactive Stop Cards:** Thumbnail, title, editable notes (auto-PATCH on change), day selector, cost per person, and animated "VISITED" stamp with strike-through.
+- **3D Walking Fox Mascot:** Rendered in Three.js WebGL canvas with skeletal bone walk animation when the trip is empty.
+- **Live Budget Calculator:** Computes total and per-person costs with USD ($) and INR (₹ at 84/$), dynamic progress bar turning red when exceeding budget, and over/under budget advisory.
+- **Multi-Modal Transit Route Estimator:** Haversine distance calculation between consecutive stops comparing:
+  - 🚶 **Walk:** Free (for distances $\le 5$ km)
+  - 🚕 **Cab:** Estimated vehicle cost per group
+  - 🚌 **Bus:** Regional and long-distance transit
+  - 🚆 **Train:** Intercity rail travel
+  - ✈️ **Flight:** Long-haul travel ($\ge 250$ km)
+- Preference switch (*Cheapest*, *Balanced*, *Fastest*) with recommended mode highlighted.
+- Plain-text trip export (`.txt`) and trip reset confirmation.
 
 ---
 
@@ -32,35 +61,39 @@ Planning a trip often involves searching across fragmented websites to discover 
 
 | Layer | Technologies |
 | :--- | :--- |
-| **Frontend** | Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS v4, Lucide React Icons |
-| **3D Visuals** | Three.js (`three`) — Interactive 3D Earth Globe with coordinate raycasting |
-| **Backend & REST APIs** | Next.js API Routes (`/api/destinations`, `/api/itinerary`, `/api/weather`, `/api/ai-plan`) |
-| **Database** | **Supabase** (PostgreSQL) via `@supabase/supabase-js` with local JSON persistent fallback |
-| **External APIs** | **Open-Meteo API** (Live Weather, zero-config), **OpenRouter AI** (Smart Itineraries), **Geoapify Places** |
-| **Deployment** | Vercel |
+| **Frontend Framework** | Next.js 15 (App Router), React 19, TypeScript strict mode |
+| **Styling & Design System** | Pure CSS Tokens & Neo-Brutalist Bento System (`--cv`, `--pp`, `--ink`, `--tom`, `--sun`, `--mint`, `--sky`, `--pink`, `--lil`), zero external component libraries |
+| **Typography** | `next/font/google`: Bricolage Grotesque (display), Instrument Sans (body), Caveat (handwritten accents) |
+| **3D Graphics** | Three.js (`three` + `GLTFLoader`), equirectangular water/land projection, GLTF skeletal animations |
+| **Backend & APIs** | Next.js API Routes (`/api/destinations`, `/api/itinerary`, `/api/weather`, `/api/ai-plan`) |
+| **Database** | **Supabase** (PostgreSQL) via `@supabase/supabase-js` with automatic resilient local storage fallback |
+| **External APIs** | **Open-Meteo API** (Live Weather, zero-config), **OpenRouter AI** (Multi-day itinerary generation) |
+| **Testing & Assets** | Playwright (`scripts/screenshots.ts`) |
 
 ---
 
-## 🔌 REST API Endpoints
+## 🔌 Backend REST API Specification
+
+All API responses follow the standard JSON envelope: `{ success: boolean, data?: any, error?: string, message?: string }`.
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | `GET` | `/api/destinations` | Search and filter destinations (`city`, `category`, `search`, `sortBy`). |
 | `GET` | `/api/destinations/[id]` | Fetch single destination with real-time Open-Meteo weather. |
 | `GET` | `/api/weather` | Live weather forecast from Open-Meteo (`lat`, `lon`, `city`). |
-| `GET` | `/api/itinerary` | Retrieve all saved itinerary items from the database. |
-| `POST` | `/api/itinerary` | Add a place to the itinerary with target day and notes. |
-| `PATCH` | `/api/itinerary/[id]` | Update itinerary item (day assignment, notes, or visited state). |
-| `DELETE` | `/api/itinerary/[id]` | Remove an item from the itinerary. |
-| `DELETE` | `/api/itinerary` | Clear entire itinerary. |
-| `POST` | `/api/ai-plan` | Generate customized multi-day itinerary via OpenRouter. |
+| `GET` | `/api/itinerary` | Retrieve all saved itinerary items from Supabase / local persistence. |
+| `POST` | `/api/itinerary` | Add a place to the itinerary with day assignment, cost, and notes. |
+| `PATCH` | `/api/itinerary/[id]` | Update itinerary item (`isVisited`, `dayNumber`, `notes`, `estimatedCost`). |
+| `DELETE` | `/api/itinerary/[id]` | Remove a single item from the itinerary. |
+| `DELETE` | `/api/itinerary` | Clear all stops from the itinerary. |
+| `POST` | `/api/ai-plan` | Generate customized multi-day itinerary via OpenRouter AI. |
 
 ---
 
 ## 🗄️ Database Setup (Supabase)
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. Open the **SQL Editor** in your Supabase dashboard and execute the script in [`supabase/schema.sql`](./supabase/schema.sql):
+2. Open the **SQL Editor** in your Supabase dashboard and run the following script:
 
 ```sql
 CREATE TABLE IF NOT EXISTS public.itinerary_items (
@@ -87,10 +120,11 @@ ALTER TABLE public.itinerary_items ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Public Access" ON public.itinerary_items FOR ALL USING (true);
 ```
 
-3. Add your Supabase keys to `.env.local`:
+3. Add your Supabase credentials to `.env.local`:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+OPENROUTER_API_KEY=your-openrouter-key-here
 ```
 
 *(Note: If no Supabase credentials are provided, TripWise automatically utilizes its built-in local store so the app operates with 100% functionality out of the box).*
@@ -101,7 +135,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
 
 ### 1. Clone the repository
 ```bash
-git clone <your-repo-url>
+git clone <repo-url>
 cd tripwise
 ```
 
@@ -110,25 +144,52 @@ cd tripwise
 npm install
 ```
 
-### 3. Configure environment variables (optional)
-```bash
-cp .env.example .env.local
-```
-
-### 4. Run the development server
+### 3. Run the development server
 ```bash
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+### 4. Build and Verify
+```bash
+npx tsc --noEmit
+npm run lint
+npm run build
+```
+
 ---
 
-## 📄 Submission Compliance Checklist
-- [x] **Track Selected:** Track 3 (Full-Stack Development)
-- [x] **Real External API:** Open-Meteo Weather API + OpenRouter AI Integration
-- [x] **Destination Exploration:** Responsive card grid, tags, ratings, price tiers
-- [x] **Search, Filter & Sort:** Debounced search, category filters, and sorting
-- [x] **Destination Details:** Modal with comprehensive info & live Open-Meteo weather
-- [x] **Itinerary Management:** Add, view, remove, organize by day, and persist in Supabase
-- [x] **UI Polish:** Three.js 3D Earth Globe, Dark/Light mode, Trip Budget Estimator, Calendar export (`.ics`), Skeleton loaders, and error handling.
+## 📸 Automated Screenshot Capture
+
+High-resolution screenshots for the submission PDF are automatically captured using Playwright across desktop (1360px) and mobile (390px) viewports:
+
+```bash
+# Ensure server is running on port 3000
+npm run build
+npm run start -- -p 3000
+
+# In another terminal:
+npx tsx scripts/screenshots.ts
+```
+
+Saved screenshots in `/screenshots`:
+- `discover.png` — Hero bento, 3D toon globe, stats count-up
+- `search-results.png` — Filtered search results
+- `filtered-by-category.png` — Category chip active filtering
+- `empty-results.png` — Graceful empty state with reset button
+- `place-sheet.png` — Slide-in place drawer with Open-Meteo live weather
+- `ai-planner-result.png` — Multi-day AI plan with timeline & pack/eat tips
+- `trip-populated.png` — Day-by-day stops, budget card, transit routes
+- `trip-empty.png` — Animated 3D walking Fox mascot
+- `dark-mode.png` — High-contrast dark theme
+- `discover-mobile.png`, `place-sheet-mobile.png`, `trip-mobile.png` — Responsive mobile layout
+
+---
+
+## 📜 Attributions & Licenses
+
+- **Weather Data:** [Open-Meteo](https://open-meteo.com/) (Licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/))
+- **Flamingo 3D Model:** [three.js examples](https://github.com/mrdoob/three.js) (mrdoob)
+- **Fox 3D Model:** Character model by PixelMannen (CC0), rigging & walk animation by @tomkranis ([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)), via the [Khronos glTF Sample Models](https://github.com/KhronosGroup/glTF-Sample-Models).
+- **Map Links:** [OpenStreetMap](https://www.openstreetmap.org/)
