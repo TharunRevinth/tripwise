@@ -269,6 +269,249 @@ export default function TripView({
 
   const dayOptions = Array.from({ length: Math.max(maxDay + 1, 5) }, (_, i) => i + 1);
 
+  const handleExportPDF = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      showToast('Pop-up blocked. Please allow pop-ups to print/export PDF.');
+      return;
+    }
+
+    const title = `TripWise Travel Catalog & Route Plan (${settings.currency})`;
+    const startDateFormatted = settings.start
+      ? new Date(settings.start).toLocaleDateString('en', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        })
+      : 'Flexible Dates';
+
+    const varianceLow = totalCost * (1 - (settings.variance ?? 10) / 100);
+    const varianceHigh = totalCost * (1 + (settings.variance ?? 10) / 100);
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>${title}</title>
+  <style>
+    @page { size: A4; margin: 16mm 14mm; }
+    * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #0D0D0D; background: #fff; line-height: 1.4; padding: 24px; max-width: 900px; margin: 0 auto; }
+    .no-print-bar { display: flex; justify-content: space-between; align-items: center; background: #0D0D0D; color: #fff; padding: 12px 18px; border-radius: 12px; margin-bottom: 24px; }
+    .no-print-bar button { background: #FFC400; border: 2px solid #0D0D0D; color: #0D0D0D; font-weight: 700; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+    .no-print-bar button:hover { background: #ffd033; }
+    @media print { .no-print-bar { display: none !important; } body { padding: 0; } }
+    
+    .header { border: 2.5px solid #0D0D0D; border-radius: 16px; padding: 20px; background: #E9EEF3; margin-bottom: 24px; box-shadow: 4px 4px 0 #0D0D0D; }
+    .header h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.8px; margin-bottom: 6px; }
+    .header p { color: #59616E; font-size: 14px; }
+    
+    .meta-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
+    .meta-card { background: #fff; border: 2px solid #0D0D0D; border-radius: 10px; padding: 10px; }
+    .meta-card small { display: block; font-size: 11px; text-transform: uppercase; color: #59616E; font-weight: 700; margin-bottom: 2px; }
+    .meta-card b { font-size: 15px; }
+
+    .section-title { font-size: 20px; font-weight: 800; margin: 28px 0 12px; border-bottom: 2.5px solid #0D0D0D; padding-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+    
+    .day-block { margin-bottom: 20px; page-break-inside: avoid; }
+    .day-header { background: #FFC400; border: 2px solid #0D0D0D; border-radius: 10px; padding: 8px 14px; font-weight: 800; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    
+    .stops-grid { display: grid; gap: 10px; }
+    .stop-card { display: flex; gap: 14px; border: 2px solid #0D0D0D; border-radius: 12px; padding: 12px; background: #fff; align-items: flex-start; page-break-inside: avoid; }
+    .stop-thumb { width: 70px; height: 70px; border-radius: 8px; object-fit: cover; border: 1.5px solid #0D0D0D; flex-shrink: 0; background: #eee; }
+    .stop-info { flex: 1; }
+    .stop-title { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+    .stop-loc { font-size: 12px; color: #59616E; margin-bottom: 6px; }
+    .stop-notes { font-size: 13px; background: #f5f5f5; border-left: 3px solid #0D0D0D; padding: 4px 8px; border-radius: 4px; margin-bottom: 4px; font-style: italic; }
+    .stop-cost { font-size: 13px; font-weight: 700; color: #0D0D0D; }
+    .category-badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border: 1.5px solid #0D0D0D; border-radius: 999px; background: #E9EEF3; margin-left: 6px; }
+
+    .route-table { width: 100%; border-collapse: collapse; border: 2px solid #0D0D0D; border-radius: 12px; overflow: hidden; margin-top: 10px; page-break-inside: avoid; }
+    .route-table th { background: #0D0D0D; color: #fff; padding: 10px; text-align: left; font-size: 12px; text-transform: uppercase; }
+    .route-table td { padding: 10px; border-bottom: 1px solid #ddd; font-size: 13px; }
+    .route-table tr:last-child td { border-bottom: none; }
+    .route-table tr:nth-child(even) td { background: #fbfbfb; }
+
+    .ledger-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px; page-break-inside: avoid; }
+    .ledger-card { border: 2.5px solid #0D0D0D; border-radius: 12px; padding: 14px; background: #3DDC97; color: #0D0D0D; }
+    .ledger-row { display: flex; justify-content: space-between; font-weight: 700; font-size: 14px; padding: 4px 0; border-bottom: 1px dashed rgba(0,0,0,0.2); }
+    .ledger-row.total { font-size: 18px; border-top: 2px solid #0D0D0D; border-bottom: none; margin-top: 8px; padding-top: 8px; }
+    .variance-box { border: 2px dashed #0D0D0D; border-radius: 10px; padding: 10px; background: #fff8; margin-top: 10px; font-size: 12px; }
+
+    .footer { text-align: center; margin-top: 36px; padding-top: 14px; border-top: 1px solid #ccc; font-size: 12px; color: #59616E; }
+  </style>
+</head>
+<body>
+  <div class="no-print-bar">
+    <div>
+      <strong>TripWise Travel Catalog & Route Map</strong>
+      <span style="font-size: 12px; margin-left: 10px; opacity: 0.8;">Click 'Save as PDF' or use browser Print</span>
+    </div>
+    <div style="display: flex; gap: 8px;">
+      <button onclick="window.print()">Print / Save as PDF</button>
+      <button style="background: #fff; color: #0D0D0D;" onclick="window.close()">Close</button>
+    </div>
+  </div>
+
+  <div class="header">
+    <h1>TripWise Travel Catalog & Route Map</h1>
+    <p>Comprehensive itinerary schedule, transit legs, and multi-currency cost ledger.</p>
+    <div class="meta-grid">
+      <div class="meta-card">
+        <small>Travelers</small>
+        <b>${settings.trav} Person${settings.trav > 1 ? 's' : ''}</b>
+      </div>
+      <div class="meta-card">
+        <small>Start Date</small>
+        <b>${startDateFormatted}</b>
+      </div>
+      <div class="meta-card">
+        <small>Duration</small>
+        <b>${maxDay} Day${maxDay > 1 ? 's' : ''} (${sortedTrip.length} Stops)</b>
+      </div>
+      <div class="meta-card">
+        <small>Target Currency</small>
+        <b>${settings.currency} (${(SUPPORTED_CURRENCIES.find(c => c.code === settings.currency)?.label) || ''})</b>
+      </div>
+    </div>
+  </div>
+
+  <!-- Day-by-Day Destination Catalog -->
+  <div class="section-title">
+    <span>1. Day-by-Day Destination Catalog</span>
+    <span style="font-size: 13px; font-weight: 600; color: #59616E;">${sortedTrip.length} Total Places</span>
+  </div>
+
+  ${Array.from({ length: maxDay }, (_, idx) => {
+    const dayNum = idx + 1;
+    const dayItems = sortedTrip.filter((t) => (t.dayNumber ?? t.day ?? 1) === dayNum);
+    if (dayItems.length === 0) return '';
+    const dayCost = dayItems.reduce((sum, item) => sum + (Number(item.estimatedCost) || 0), 0);
+
+    return `
+    <div class="day-block">
+      <div class="day-header">
+        <span>Day ${dayNum} ${formatDateForDay(dayNum) ? `— ${formatDateForDay(dayNum)}` : ''}</span>
+        <span>${fmt(dayCost)} per person</span>
+      </div>
+      <div class="stops-grid">
+        ${dayItems.map((item) => `
+          <div class="stop-card">
+            ${item.imageUrl ? `<img src="${item.imageUrl}" class="stop-thumb" alt=""/>` : `<div class="stop-thumb" style="display:flex;align-items:center;justify-content:center;font-size:24px;">📍</div>`}
+            <div class="stop-info">
+              <div class="stop-title">
+                ${item.name}
+                <span class="category-badge">${item.category}</span>
+                ${item.isVisited ? `<span style="font-size:11px;color:#3DDC97;font-weight:700;margin-left:6px;">✓ Visited</span>` : ''}
+              </div>
+              <div class="stop-loc">📍 ${item.city}${item.country ? `, ${item.country}` : ''}</div>
+              ${item.notes ? `<div class="stop-notes">“${item.notes}”</div>` : ''}
+              <div class="stop-cost">Estimated ticket / admission: <strong>${fmt(Number(item.estimatedCost) || 0)}</strong> per person</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    `;
+  }).join('')}
+
+  <!-- Route Map & Transit Legs -->
+  <div class="section-title">
+    <span>2. Transit Route Map & Leg Estimates</span>
+    <span style="font-size: 13px; font-weight: 600; color: #59616E;">Mode Preference: ${settings.pref.toUpperCase()}</span>
+  </div>
+
+  ${legs.length > 0 ? `
+    <table class="route-table">
+      <thead>
+        <tr>
+          <th>From Stop</th>
+          <th>To Stop</th>
+          <th>Distance</th>
+          <th>Recommended Mode</th>
+          <th>Duration</th>
+          <th>Est. Transit Fare</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${legs.map(leg => `
+          <tr>
+            <td><strong>${leg.a.name}</strong> (${leg.a.city})</td>
+            <td><strong>${leg.b.name}</strong> (${leg.b.city})</td>
+            <td>${leg.d < 10 ? leg.d.toFixed(1) : Math.round(leg.d)} km</td>
+            <td>${MODES[leg.pick.k]?.e || '🚗'} ${MODES[leg.pick.k]?.n || 'Transit'}</td>
+            <td>${hr(leg.pick.h)}</td>
+            <td><strong>${leg.pick.cost ? fmt(leg.pick.cost) : 'Free'}</strong></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  ` : `
+    <p style="font-size: 13px; color: #59616E; font-style: italic; padding: 10px 0;">Add two or more stops with geographical coordinates to calculate transit routes.</p>
+  `}
+
+  <!-- Financial Ledger & Variance Buffer -->
+  <div class="section-title">
+    <span>3. Budget Ledger & Foreign Variance Risk Range</span>
+  </div>
+
+  <div class="ledger-grid">
+    <div class="ledger-card" style="background: #FFC400;">
+      <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 8px;">Cost Breakdown (${settings.currency})</h3>
+      <div class="ledger-row">
+        <span>Places & Attractions (${settings.trav} pax)</span>
+        <span>${fmt(activitiesTotal)}</span>
+      </div>
+      <div class="ledger-row">
+        <span>Transit & Getting Around</span>
+        <span>${fmt(transitTotal)}</span>
+      </div>
+      <div class="ledger-row total">
+        <span>Overall Estimated Total</span>
+        <span>${fmt(totalCost)}</span>
+      </div>
+      <div class="ledger-row" style="border: none; padding-top: 6px; font-size: 13px; opacity: 0.9;">
+        <span>Cost Per Person</span>
+        <span>${fmt(totalCost / settings.trav)}</span>
+      </div>
+    </div>
+
+    <div class="ledger-card" style="background: #E9EEF3;">
+      <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 8px;">Foreign Risk Buffer (±${settings.variance ?? 10}%)</h3>
+      <p style="font-size: 13px; margin-bottom: 8px;">Realistic budget margin accounting for foreign credit card markup fees (2–3%), currency fluctuations, and local incidentals:</p>
+      <div class="variance-box">
+        <div style="display:flex; justify-content:space-between; font-weight:800; font-size:14px;">
+          <span>Estimated Range:</span>
+          <span>${fmt(varianceLow)} – ${fmt(varianceHigh)}</span>
+        </div>
+        <div style="margin-top: 4px; color: #59616E;">
+          Base budget: ${fmt(settings.budget)} (${totalCost > settings.budget ? 'Over budget' : 'Within budget'})
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Generated by TripWise Smart Travel Planner · Real-time FX & weather · Have a safe journey!
+  </div>
+
+  <script>
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        window.print();
+      }, 500);
+    });
+  </script>
+</body>
+</html>`;
+
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+    showToast('Catalog PDF preview opened');
+  };
+
   const handleExportPlan = () => {
     let text = `TripWise plan (${settings.currency})\n`;
     sortedTrip.forEach((y) => {
@@ -636,11 +879,30 @@ export default function TripView({
             </div>
 
             {/* Quick Actions */}
-            <div className="row">
-              <button className="btn o" type="button" onClick={handleExportPlan}>
-                Export plan
+            <div className="row" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <button
+                className="btn"
+                type="button"
+                style={{ flex: '1 1 100%', justifyContent: 'center' }}
+                onClick={handleExportPDF}
+              >
+                📄 Export PDF Catalog & Route Map
               </button>
-              <button className="btn o" type="button" onClick={onClearTrip}>
+              <button
+                className="btn o sm"
+                type="button"
+                style={{ flex: 1, justifyContent: 'center' }}
+                onClick={handleExportPlan}
+                title="Download plain-text itinerary file"
+              >
+                Download .txt
+              </button>
+              <button
+                className="btn o sm"
+                type="button"
+                onClick={onClearTrip}
+                title="Clear all stops from itinerary"
+              >
                 Clear trip
               </button>
             </div>

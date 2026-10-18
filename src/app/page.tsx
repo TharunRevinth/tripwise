@@ -34,7 +34,7 @@ const slug = (s: string) =>
 const num = (s: any) => +(String(s).match(/\d+(\.\d+)?/) || [0])[0];
 
 const defCost = (d: any) =>
-  ({ $: 15, '$$': 40, '$$$': 90, '$$$$': 180 }[d?.priceLevel as string] ?? 0);
+  ({ $: 15, '$$': 40, '$$$': 90, '$$$$': 180 }[d?.priceLevel as string] ?? (d?.estimatedCost || 15));
 
 export default function HomePage() {
   const [view, setView] = useState<'discover' | 'plan' | 'trip'>('discover');

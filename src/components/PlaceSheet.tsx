@@ -49,7 +49,21 @@ const wx = (c: string = '') =>
     : '🌤️';
 
 const defCost = (d: any) =>
-  ({ $: 15, '$$': 40, '$$$': 90, '$$$$': 180 }[d?.priceLevel as string] ?? 0);
+  ({ $: 15, '$$': 40, '$$$': 90, '$$$$': 180 }[d?.priceLevel as string] ?? (d?.estimatedCost || 15));
+
+const getPriceLabel = (d: any) => {
+  if (!d) return 'Free';
+  const tier = d.priceLevel;
+  const costMap: Record<string, number> = { $: 15, '$$': 40, '$$$': 90, '$$$$': 180 };
+  const approx = tier ? costMap[tier] : null;
+  if (approx) {
+    return `$${approx} pp (${tier})`;
+  }
+  if (d.estimatedCost && d.estimatedCost > 0) {
+    return `$${d.estimatedCost} pp`;
+  }
+  return tier || 'Free admission';
+};
 
 const fmtN = (n?: number) =>
   n && n >= 1e3 ? (n / 1e3).toFixed(1).replace('.0', '') + 'k' : n ?? 0;
@@ -88,7 +102,7 @@ export default function PlaceSheet({
     const base = allDestinations.find((d) => d.id === placeId);
     setDetails(base || null);
     setLoading(true);
-    setCost(base ? defCost(base) : 0);
+    setCost(base ? defCost(base) : 15);
     setDay(1);
     setNotes('');
 
@@ -99,6 +113,8 @@ export default function PlaceSheet({
         if (json.success && json.data) {
           const d = json.data;
           setDetails((prev: any) => ({ ...prev, ...d }));
+          const calculated = defCost(d);
+          setCost((prev) => (prev > 0 ? prev : calculated));
           if (d.weather) {
             setWeather(d.weather);
           } else if (d.latitude && d.longitude) {
@@ -230,7 +246,7 @@ export default function PlaceSheet({
             </div>
             <div className="t" style={{ background: 'var(--mint)', color: 'var(--k)' }}>
               <small>Price</small>
-              <b>{details.priceLevel || 'Free'}</b>
+              <b style={{ fontSize: 15 }}>{getPriceLabel(details)}</b>
             </div>
             <div className="t" style={{ background: 'var(--pink)', color: 'var(--k)' }}>
               <small>Rating</small>
@@ -251,15 +267,85 @@ export default function PlaceSheet({
             ))}
           </div>
 
-          {isFinite(lat) && (
-            <a
-              href={`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=15/${lat}/${lon}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ fontWeight: 700 }}
+          {/* Interactive In-App Map Preview */}
+          {isFinite(lat) && isFinite(lon) && (
+            <div
+              className="t"
+              style={{
+                padding: 0,
+                overflow: 'hidden',
+                borderRadius: 16,
+                border: '2.5px solid var(--ink)',
+                background: 'var(--pp)',
+              }}
             >
-              Open on the map
-            </a>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '8px 12px',
+                  background: 'var(--cv)',
+                  borderBottom: '2px solid var(--ink)',
+                  fontSize: 12,
+                  fontWeight: 700,
+                }}
+              >
+                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span>🗺️</span> Location Map Preview
+                </span>
+                <span style={{ color: 'var(--mu)', fontSize: 11 }}>
+                  {lat.toFixed(4)}°, {lon.toFixed(4)}°
+                </span>
+              </div>
+              <div style={{ position: 'relative', width: '100%', height: 210, background: '#e5e3df' }}>
+                <iframe
+                  title={`Map location of ${details.name}`}
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0, display: 'block' }}
+                  loading="lazy"
+                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${lon - 0.012}%2C${lat - 0.012}%2C${lon + 0.012}%2C${lat + 0.012}&layer=mapnik&marker=${lat}%2C${lon}`}
+                />
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '8px 12px',
+                  background: 'var(--pp)',
+                  fontSize: 11,
+                  gap: 8,
+                }}
+              >
+                <span
+                  style={{
+                    color: 'var(--mu)',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    maxWidth: '65%',
+                  }}
+                  title={details.address || `${details.city}, ${details.country}`}
+                >
+                  📍 {details.address || `${details.city}, ${details.country}`}
+                </span>
+                <a
+                  href={`https://maps.google.com/?q=${lat},${lon}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    fontWeight: 700,
+                    color: 'var(--ink)',
+                    textDecoration: 'underline',
+                    flexShrink: 0,
+                  }}
+                >
+                  Google Maps ↗
+                </a>
+              </div>
+            </div>
           )}
 
           {inTrip ? (

@@ -27,7 +27,7 @@ async function main() {
   try {
     // 1. Discover View (Default Desktop)
     console.log('Capturing: discover.png');
-    await page.goto(`${BASE_URL}#discover`, { waitUntil: 'networkidle' });
+    await page.goto(`${BASE_URL}#discover`, { waitUntil: 'domcontentloaded', timeout: 15000 });
     await wait(2000); // Allow 3D globe and count-ups to initialize
     await page.screenshot({ path: path.join(OUT_DIR, 'discover.png'), fullPage: false });
 
@@ -78,7 +78,7 @@ async function main() {
 
     // 6. AI Planner View
     console.log('Capturing: ai-planner-result.png');
-    await page.goto(`${BASE_URL}#plan`, { waitUntil: 'networkidle' });
+    await page.goto(`${BASE_URL}#plan`, { waitUntil: 'domcontentloaded', timeout: 15000 });
     await wait(800);
     const planBtn = page.locator('#pgo, button:has-text("Plan my days")');
     if (await planBtn.isVisible()) {
@@ -90,7 +90,7 @@ async function main() {
 
     // 7. My Trip (Populated & Empty)
     console.log('Capturing: trip views');
-    await page.goto(`${BASE_URL}#trip`, { waitUntil: 'networkidle' });
+    await page.goto(`${BASE_URL}#trip`, { waitUntil: 'domcontentloaded', timeout: 15000 });
     await wait(1200);
 
     // 7. My Trip (Populated & Empty)
@@ -119,14 +119,14 @@ async function main() {
       });
     }
 
-    await page.goto(`${BASE_URL}#trip`, { waitUntil: 'networkidle' });
+    await page.goto(`${BASE_URL}#trip`, { waitUntil: 'domcontentloaded', timeout: 15000 });
     await wait(1200);
     console.log('Capturing: trip-populated.png');
     await page.screenshot({ path: path.join(OUT_DIR, 'trip-populated.png') });
 
     // Clear trip to capture empty state with 3D Fox mascot
     await fetch(`${BASE_URL}/api/itinerary`, { method: 'DELETE' });
-    await page.reload({ waitUntil: 'networkidle' });
+    await page.reload({ waitUntil: 'domcontentloaded', timeout: 15000 });
     await wait(1500);
     console.log('Capturing: trip-empty.png');
     await page.screenshot({ path: path.join(OUT_DIR, 'trip-empty.png') });
@@ -156,7 +156,7 @@ async function main() {
 
     // 8. Dark Mode
     console.log('Capturing: dark-mode.png');
-    await page.goto(`${BASE_URL}#discover`, { waitUntil: 'networkidle' });
+    await page.goto(`${BASE_URL}#discover`, { waitUntil: 'domcontentloaded', timeout: 15000 });
     await wait(800);
     const darkToggle = page.locator('#dk');
     if (await darkToggle.isVisible()) {
@@ -184,7 +184,7 @@ async function main() {
 
     // 9. Mobile Discover
     console.log('Capturing: discover-mobile.png');
-    await mobilePage.goto(`${BASE_URL}#discover`, { waitUntil: 'networkidle' });
+    await mobilePage.goto(`${BASE_URL}#discover`, { waitUntil: 'domcontentloaded', timeout: 15000 });
     await wait(1500);
     await mobilePage.screenshot({ path: path.join(OUT_DIR, 'discover-mobile.png') });
 

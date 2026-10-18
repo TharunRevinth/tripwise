@@ -63,6 +63,13 @@ const COUNTRY_FLAGS: Record<string, string> = {
 
 const CATS = Object.keys(EM);
 
+const PRICE_TIERS: Record<string, number> = {
+  $: 15,
+  '$$': 40,
+  '$$$': 90,
+  '$$$$': 180,
+};
+
 const fmtN = (n?: number) =>
   n && n >= 1e3 ? (n / 1e3).toFixed(1).replace('.0', '') + 'k' : n ?? 0;
 
@@ -402,7 +409,13 @@ export default function DiscoverView({
                         ★ {d.rating != null ? Number(d.rating).toFixed(1) : '–'}{' '}
                         <small>({fmtN(d.reviewCount)})</small>
                       </span>
-                      <span className="pl">{d.priceLevel || 'Free'}</span>
+                      <span className="pl">
+                        {d.priceLevel
+                          ? `$${PRICE_TIERS[d.priceLevel] || 15} pp (${d.priceLevel})`
+                          : d.estimatedCost
+                          ? `$${d.estimatedCost} pp`
+                          : 'Free'}
+                      </span>
                     </div>
                     <div className="tgs">
                       {(d.tags || []).slice(0, 3).map((t: string) => (

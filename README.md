@@ -1,105 +1,256 @@
-# 🌍 TripWise — Smart Travel Planner
+# TripWise - Smart Travel Planner
 
 [![Track](https://img.shields.io/badge/Track-3%3A%20Full--Stack-blue.svg)](https://github.com)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React-19-61dafb)](https://react.dev)
-[![Three.js](https://img.shields.io/badge/Three.js-3D%20Globe%20%26%20Fox-black)](https://threejs.org)
-[![Supabase](https://img.shields.io/badge/Database-Supabase-3ecf8e)](https://supabase.com)
-[![Open-Meteo](https://img.shields.io/badge/Weather-Open--Meteo-ff7e67)](https://open-meteo.com)
-[![OpenRouter](https://img.shields.io/badge/AI-OpenRouter-6366f1)](https://openrouter.ai)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178c6)](https://www.typescriptlang.org)
+[![Three.js](https://img.shields.io/badge/Three.js-WebGL%203D-black)](https://threejs.org)
+[![Database](https://img.shields.io/badge/Database-Supabase-3ecf8e)](https://supabase.com)
+[![Weather](https://img.shields.io/badge/Weather-Open--Meteo-ff7e67)](https://open-meteo.com)
+[![Exchange Rates](https://img.shields.io/badge/FX-Open%20Exchange%20Rates-0052cc)](https://open.er-api.com)
+[![AI Engine](https://img.shields.io/badge/AI-NVIDIA%20NIM%20%7C%20OpenRouter-76b900)](https://build.nvidia.com)
 
-> **AWS Student Builder Group, VIT Chennai — Web Development Recruitment Task**  
+> **AWS Student Builder Group, VIT Chennai - Web Development Recruitment Task**  
 > **Track:** Track 3: Full-Stack Development
 
 ---
 
-## 📌 Project Overview
+## Executive Summary
 
-**TripWise** is a full-stack, AI-augmented travel planning application built with Next.js 15 App Router, React 19, and Three.js. It features a distinctive neo-brutalist bento design with hand-drawn accents, real-time Open-Meteo weather integration, geospatial 3D earth exploration with coordinate raycasting, OpenRouter multi-day AI itinerary generation, budget calculation, transit route estimation, and Supabase database persistence.
+TripWise is an enterprise-grade, full-stack travel intelligence and itinerary management platform engineered with Next.js 15 (App Router), React 19, and Three.js. The application integrates real-time meteorological forecasts, geospatial 3D globe visualization with spherical coordinate raycasting, algorithmic multi-modal transit estimations, dual-engine generative AI itinerary synthesis (supporting NVIDIA NIM and OpenRouter), live central bank foreign exchange conversions with risk-variance buffering, and resilient database persistence with Supabase PostgreSQL and automated offline fallbacks.
 
----
-
-## ✨ Features & Architecture
-
-### 1. Discover Experience
-- **Neo-Brutalist Hero Bento:** Headline with self-drawing SVG squiggles, debounced search form, live count-up stats (`places` and `cities`), and animated AI shortcut.
-- **Interactive 3D Toon Globe (Three.js):** Custom toon-shaded 3-band sphere with land/water mask, drifting cloud clusters, orbiting animated Flamingo GLTF model, clickable raycaster pins, and flight camera arcs.
-- **Dynamic City Marquee:** Smooth continuous ticker of featured destinations with pause-on-hover.
-- **Filters & Sorting:** City chips, category filters (`Historical 🏛️`, `Nature 🌿`, `Food & Dining 🍜`, `Landmarks 🗼`, `Entertainment 🎭`, `Culture 🎨`), sort by top-rated or name, skeleton loaders, and empty/error states with retry.
-
-### 2. Slide-In Place Sheet
-- Accessible slide-in drawer with overlay, keyboard `Escape` dismissal, and focus trapping.
-- **Real-Time Weather Tile (Open-Meteo):** Live temperature, condition emoji, humidity, wind speed, and 5-day daily forecast with high/low temperatures.
-- **Bento Fact Tiles:** Best time to visit, price tiers (`$`, `$$`, `$$$`, `$$$$`), rating with review count, address, and OpenStreetMap direct link.
-- **Itinerary Add Form:** Select target day (1–10), prefilled cost per person, custom visit notes, or quick-removal if already saved.
-- **Contextual Recommendations:** "More in {city}" quick-links to nearby attractions.
-
-### 3. OpenRouter AI Planner
-- Form with city autocomplete datalist, trip duration (1–7 days), vibe/theme selector (*Culture & Heritage*, *Food & Markets*, *Nature & Outdoors*, *Relax & Beaches*, *Nightlife & Fun*, *Family Friendly*), and pace chips (*relaxed*, *moderate*, *packed*).
-- Animated progress bar loader while the AI crafts the multi-day schedule.
-- Output cards with time-of-day timeline spots, handwritten tips, and cost estimates.
-- **1-Click Add:** Add individual spots or an entire day into your itinerary, automatically matching known coordinates and tags.
-- Curated **"Pack this"** checklist and **"Eat this"** local delicacy recommendations.
-
-### 4. My Trip Itinerary, Live Currency Converter & Route Estimator
-- **Day-by-Day Timeline:** Stops grouped by day with optional calendar dates derived from trip start date.
-- **Interactive Stop Cards:** Thumbnail, title, editable notes (auto-PATCH on change), day selector, cost per person with live currency preview, and animated "VISITED" stamp with strike-through.
-- **3D Walking Fox Mascot:** Rendered in Three.js WebGL canvas with skeletal bone walk animation when the trip is empty.
-- **Live Currency Converter & Foreign Trip Variance Buffer:**
-  - Real-time exchange rates via `/api/currency` (Open Exchange Rates API, 1-hour cache, resilient fallback).
-  - Multi-currency support: USD (`$`), INR (`₹`), EUR (`€`), GBP (`£`), JPY (`¥`), AED (`AED`), SGD (`S$`), THB (`฿`), IDR (`Rp`), AUD (`A$`), CAD (`C$`), CHF (`CHF`).
-  - **Foreign Trip Buffer (±%):** Dynamic toggles (`±0%`, `±5%`, `±10%`, `±15%`) providing realistic estimate ranges to cover credit card foreign transaction fees (2–3%), seasonal FX swings, and unexpected expenses.
-  - Live FX status indicator (`● Live FX` / `○ Offline FX`).
-- **Live Budget Calculator:** Dynamic progress bar turning red when exceeding budget, and over/under budget advisory.
-- **Multi-Modal Transit Route Estimator:** Haversine distance calculation between consecutive stops comparing:
-  - 🚶 **Walk:** Free (for distances $\le 5$ km)
-  - 🚕 **Cab:** Estimated vehicle cost per group
-  - 🚌 **Bus:** Regional and long-distance transit
-  - 🚆 **Train:** Intercity rail travel
-  - ✈️ **Flight:** Long-haul travel ($\ge 250$ km)
-- Preference switch (*Cheapest*, *Balanced*, *Fastest*) with recommended mode highlighted.
-- Plain-text trip export (`.txt`) with selected currency breakdown and trip reset confirmation.
+The user interface adheres to a Neo-Brutalist Bento design system engineered using native CSS custom properties and atomic tokens, ensuring zero external component library overhead, rigorous WCAG accessibility compliance, and optimized performance.
 
 ---
 
-## 🛠️ Technology Stack
+## System Architecture
 
-| Layer | Technologies |
-| :--- | :--- |
-| **Frontend Framework** | Next.js 15 (App Router), React 19, TypeScript strict mode |
-| **Styling & Design System** | Pure CSS Tokens & Neo-Brutalist Bento System (`--cv`, `--pp`, `--ink`, `--tom`, `--sun`, `--mint`, `--sky`, `--pink`, `--lil`), zero external component libraries |
-| **Typography** | `next/font/google`: Bricolage Grotesque (display), Instrument Sans (body), Caveat (handwritten accents) |
-| **3D Graphics** | Three.js (`three` + `GLTFLoader`), equirectangular water/land projection, GLTF skeletal animations |
-| **Backend & APIs** | Next.js API Routes (`/api/destinations`, `/api/itinerary`, `/api/weather`, `/api/ai-plan`, `/api/currency`) |
-| **Database** | **Supabase** (PostgreSQL) via `@supabase/supabase-js` with automatic resilient local storage fallback |
-| **External APIs** | **Open-Meteo API** (Live Weather, zero-config), **Open Exchange Rates** (Live FX rates), **OpenRouter AI / NVIDIA NIM** (Multi-day itinerary generation) |
-| **Testing & Assets** | Playwright (`scripts/screenshots.ts`) |
+TripWise follows a modular full-stack architecture separating presentation, 3D WebGL rendering, edge routing, inference processing, and data persistence.
+
+```mermaid
+flowchart TD
+    subgraph ClientLayer ["Client Presentation Layer (React 19 / Next.js App Router)"]
+        UI["Bento UI Components\n(Discover, PlaceSheet, AIPlanner, TripView)"]
+        ThreeCanvas["Three.js WebGL Engine\n(Interactive Toon Globe & Skeletal Mascot)"]
+        ClientState["Client State & Optimistic Cache\n(LocalStorage + SWR Pattern)"]
+    end
+
+    subgraph ServerLayer ["Server & API Routing Layer (Next.js 15)"]
+        APIDestinations["/api/destinations\n(Query, Filter & Geospatial Index)"]
+        APIWeather["/api/weather\n(Meteorological Proxy)"]
+        APICurrency["/api/currency\n(Central Bank FX Rates Cache)"]
+        APIIAIPlan["/api/ai-plan\n(Dual AI Inference Controller)"]
+        APIItinerary["/api/itinerary\n(CRUD Operations & Persistence)"]
+    end
+
+    subgraph DataLayer ["Data & External Service Integration"]
+        SupabaseDB[("Supabase PostgreSQL\n(Row Level Security Enabled)")]
+        OpenMeteo["Open-Meteo Weather API\n(Global Forecast Engine)"]
+        OpenExchange["Open Exchange Rates API\n(Real-Time Currency Rates)"]
+        AIProviders["Inference Engine\n(NVIDIA NIM LLaMA-3.3 / OpenRouter Gemini-2.0)"]
+        LocalStore[("Resilient Local Fallback Store\n(Zero-Downtime Guarantee)")]
+    end
+
+    UI --> ClientState
+    UI --> ThreeCanvas
+    ClientState -->|HTTP REST| ServerLayer
+
+    APIDestinations --> LocalStore
+    APIWeather --> OpenMeteo
+    APICurrency --> OpenExchange
+    APICurrency -.->|Fallback Matrix| LocalStore
+    APIIAIPlan --> AIProviders
+    APIIAIPlan -.->|Deterministic Synthesis| LocalStore
+    APIItinerary --> SupabaseDB
+    APIItinerary -.->|Auto-Recovery| LocalStore
+```
 
 ---
 
-## 🔌 Backend REST API Specification
+## Data Flow & Lifecycle Sequence
 
-All API responses follow the standard JSON envelope: `{ success: boolean, data?: any, error?: string, message?: string }`.
+The following sequence details an end-to-end trip creation lifecycle, encompassing generative itinerary synthesis, database persistence, and live multi-currency recalculation.
 
-| Method | Endpoint | Description |
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Traveler
+    participant Client as TripWise Client (React 19)
+    participant Server as Next.js API Layer
+    participant AI as AI Engine (NVIDIA NIM / OpenRouter)
+    participant FX as FX Provider (Open Exchange Rates)
+    participant DB as Supabase PostgreSQL
+
+    User->>Client: Submit Trip Parameters (City, Duration, Vibe, Pace)
+    Client->>Server: POST /api/ai-plan
+    alt AI Key Configured (NVIDIA NIM or OpenRouter)
+        Server->>AI: Chat Completion Request (Structured JSON Schema)
+        AI-->>Server: Return Multi-Day Schedule & Recommendations
+    else Offline / No Key Provided
+        Server->>Server: Execute Algorithmic Itinerary Synthesis
+    end
+    Server-->>Client: Structured Itinerary Payload
+    Client->>User: Render Interactive Day-by-Day Schedule
+
+    User->>Client: Add Spots to Itinerary
+    Client->>Client: Perform Optimistic State Update
+    Client->>Server: POST /api/itinerary (Batch or Single Stop)
+    alt Supabase Connected
+        Server->>DB: INSERT into itinerary_items
+        DB-->>Server: Confirmation Record
+    else Local Storage Mode
+        Server->>Server: Write to Local Persistence Cache
+    end
+    Server-->>Client: HTTP 201 Created
+
+    User->>Client: Toggle Currency (e.g., INR) & Variance (e.g., ±10%)
+    Client->>Server: GET /api/currency
+    Server->>FX: Fetch Central Bank Base Rates
+    FX-->>Server: Latest Rates Matrix
+    Server-->>Client: Cached Rates Payload (Base: USD)
+    Client->>Client: Recalculate Per-Stop, Transit & Risk Range
+    Client->>User: Display Converted Totals and Budget Safety Margin
+```
+
+---
+
+## Database Entity-Relationship Model
+
+```mermaid
+erDiagram
+    DESTINATIONS {
+        string id PK
+        string name
+        string city
+        string country
+        string category
+        string description
+        string imageUrl
+        float latitude
+        float longitude
+        float rating
+        int reviewCount
+        string priceLevel
+        string[] tags
+        string bestTimeToVisit
+        string address
+    }
+
+    ITINERARY_ITEMS {
+        string id PK
+        string placeId FK
+        string name
+        string city
+        string country
+        string category
+        string description
+        string imageUrl
+        float latitude
+        float longitude
+        int dayNumber
+        string notes
+        string targetDate
+        float estimatedCost
+        boolean isVisited
+        timestamp createdAt
+        timestamp updatedAt
+    }
+
+    DESTINATIONS ||--o{ ITINERARY_ITEMS : "references metadata"
+```
+
+---
+
+## Core Capabilities
+
+### 1. Geospatial Discovery & Hierarchical Exploration
+- **3D Toon Globe Engine:** Built with Three.js, featuring an equirectangular land-water projection shader, procedural atmospheric cloud clusters, an orbiting animated Flamingo GLTF entity, raycasting for interactive coordinate pins, and smooth spherical flight camera arcs.
+- **Hierarchical Drilldown:** Two-stage cascading filter system (Country -> City -> Category) covering 68 world-class destinations across 11 nations (India, Japan, France, United States, Italy, Indonesia, United Kingdom, United Arab Emirates, Singapore, Thailand, Spain).
+- **Debounced Instant Search:** 350ms input debounce mechanism filtering across destination titles, cities, countries, and descriptive metadata tags.
+- **Dynamic City Marquee:** Smooth continuous ticker with pause-on-hover interaction.
+
+### 2. Slide-In Place Detail Sheet
+- **Accessible Modal Drawer:** Keyboard `Escape` dismiss, focus trap, and backdrop dismissal.
+- **Real-Time Meteorological Tile:** Live integration with Open-Meteo API displaying current ambient temperature, humidity, wind velocity, and a 5-day daily forecast with high/low margins.
+- **Bento Fact Matrix:** Highlights optimal seasonal visiting windows, pricing tiers (`$15`, `$$40`, `$$$90`, `$$$$180`), user ratings with sample review volumes, formatted physical addresses, and direct OpenStreetMap geographic links.
+- **Itinerary Assignment Form:** Allows custom day allocation (Days 1 to 10), prefilled per-person ticket estimates, personal visit notes, and removal controls.
+
+### 3. Dual-Provider AI Itinerary Generator
+- **Universal Provider Architecture:** Native plug-and-play compatibility with either **NVIDIA NIM** (`meta/llama-3.3-70b-instruct`) or **OpenRouter** (`google/gemini-2.0-flash`).
+- **Resilient Fallback Mode:** In environments where external API keys are omitted or rate-limited, the system seamlessly transitions to an internal deterministic travel synthesis algorithm, guaranteeing 100% service uptime.
+- **Structured Schedule Output:** Outputs day-by-day itineraries with morning, afternoon, and evening timelines, local cultural tips, packing checklists, and local cuisine suggestions.
+- **One-Click Itinerary Import:** Allows travelers to add individual stops or entire day itineraries directly into their itinerary with automatic tag and coordinate normalization.
+
+### 4. Itinerary Management, Currency Converter & Route Engine
+- **Day-by-Day Timeline Management:** Groups stops by assigned itinerary days with calendar dates computed from the user's defined start date.
+- **Inline Item Manipulation:** Real-time editing of travel notes (auto-PATCH on blur), day reassignment, ticket cost modification, and animated visit status toggles.
+- **Live Currency Converter:** Converts all activity, transit, and overall trip totals into 12 major international currencies (USD, INR, EUR, GBP, JPY, AED, SGD, THB, IDR, AUD, CAD, CHF) using fresh central bank FX data fetched via `/api/currency`.
+- **Foreign Trip Risk-Variance Buffer:** Provides selectable tolerance toggles (`±0%`, `±5%`, `±10%`, `±15%`) to calculate realistic minimum and maximum foreign expenditure boundaries, accounting for credit card foreign transaction fees (2% to 3%), local tips, and exchange rate volatility.
+- **Algorithmic Multi-Modal Route Estimator:** Computes pairwise Haversine Great-Circle transit legs between consecutive stops, comparing five distinct transport modes:
+  - **Walking:** Free of charge, evaluated for distances $d \le 5$ km.
+  - **Cab / Taxi:** Vehicle-scaled rates based on group passenger count.
+  - **Bus Transit:** Cost-effective regional travel for intermediate distances.
+  - **Intercity Train:** Rail option for medium-to-long continental distances within identical national boundaries.
+  - **Commercial Flight:** High-speed transit evaluated for intercity legs $d \ge 250$ km.
+- **Optimization Strategy Toggle:** Allows switching route recommendations between *Cheapest*, *Balanced*, and *Fastest* scoring profiles.
+- **Empty State Mascot:** Three.js skeletal animated walking Fox canvas displayed when the itinerary is unpopulated.
+- **Plan Export:** Plain-text formatted export (`.txt`) containing the schedule, notes, currency breakdown, and estimated risk boundaries.
+
+---
+
+## Technical Specifications
+
+| Component | Technology | Rationale & Implementation Details |
 | :--- | :--- | :--- |
-| `GET` | `/api/destinations` | Search and filter destinations (`country`, `city`, `category`, `search`, `sortBy`). |
-| `GET` | `/api/destinations/[id]` | Fetch single destination with real-time Open-Meteo weather. |
-| `GET` | `/api/weather` | Live weather forecast from Open-Meteo (`lat`, `lon`, `city`). |
-| `GET` | `/api/currency` | Live exchange rates and fallback matrix (`USD`, `INR`, `EUR`, `GBP`, `JPY`, etc.). |
-| `GET` | `/api/itinerary` | Retrieve all saved itinerary items from Supabase / local persistence. |
-| `POST` | `/api/itinerary` | Add a place to the itinerary with day assignment, cost, and notes. |
-| `PATCH` | `/api/itinerary/[id]` | Update itinerary item (`isVisited`, `dayNumber`, `notes`, `estimatedCost`). |
-| `DELETE` | `/api/itinerary/[id]` | Remove a single item from the itinerary. |
-| `DELETE` | `/api/itinerary` | Clear all stops from the itinerary. |
-| `POST` | `/api/ai-plan` | Generate customized multi-day itinerary via OpenRouter or NVIDIA NIM. |
+| **Frontend Framework** | Next.js 15.4+ (App Router) | Server Components where applicable; selective Client Components (`'use client'`) for interactive panels. |
+| **UI Library** | React 19 | Concurrent rendering, modern hooks, and transition primitives. |
+| **Language** | TypeScript 5 (Strict Mode) | Full type-safety across API contracts, UI props, and external integration payloads. |
+| **Styling Architecture** | Pure CSS Variables & Bento Tokens | Zero CSS-in-JS runtime overhead; custom design tokens (`--cv`, `--pp`, `--ink`, `--tom`, `--sun`, `--mint`, `--sky`, `--pink`, `--lil`). |
+| **Typography** | `next/font/google` | Self-hosted Google Fonts: Bricolage Grotesque (Headings), Instrument Sans (Body), Caveat (Handwritten Accents). |
+| **3D Rendering** | Three.js (`three` + `GLTFLoader`) | Dynamic WebGL canvas components with client-side dynamic loading (`ssr: false`). |
+| **Database** | Supabase (PostgreSQL) | Managed relational storage with Row Level Security (RLS) policies and automatic local storage fallback. |
+| **Meteorological Data** | Open-Meteo API | Free, unauthenticated global weather API with 1-hour response caching. |
+| **Currency Data** | Open Exchange Rates API | Free public central bank FX rates cached at `/api/currency` with comprehensive offline fallback matrix. |
+| **AI Inference** | NVIDIA NIM / OpenRouter | Dual-adapter pattern supporting high-performance LLaMA 3.3 and Gemini 2.0 Flash models. |
+| **Visual Verification** | Playwright Test Suite | Automated headless script (`scripts/screenshots.ts`) capturing high-resolution desktop and mobile viewports. |
 
 ---
 
-## 🗄️ Database Setup (Supabase)
+## Backend REST API Reference
+
+All endpoints return a uniform JSON envelope:
+
+```json
+{
+  "success": true,
+  "data": {},
+  "message": "Operation completed successfully"
+}
+```
+
+### Endpoints Specification
+
+| Method | Endpoint | Query / Body Parameters | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/destinations` | `country`, `city`, `category`, `search`, `sortBy` | Retrieves filtered catalog of destinations with computed metadata. |
+| `GET` | `/api/destinations/[id]` | Route parameter: `id` | Retrieves detailed destination metadata bundled with real-time weather. |
+| `GET` | `/api/weather` | `lat`, `lon`, `city` | Returns current weather metrics and 5-day meteorological forecast. |
+| `GET` | `/api/currency` | None | Returns latest exchange rate matrix and live connectivity status. |
+| `GET` | `/api/itinerary` | None | Fetches all persisted user itinerary items. |
+| `POST` | `/api/itinerary` | `placeId`, `dayNumber`, `notes`, `estimatedCost` | Persists a new destination stop to the user's travel itinerary. |
+| `PATCH` | `/api/itinerary/[id]` | `isVisited`, `dayNumber`, `notes`, `estimatedCost` | Updates an existing itinerary record. |
+| `DELETE` | `/api/itinerary/[id]` | Route parameter: `id` | Removes an individual stop from the itinerary. |
+| `DELETE` | `/api/itinerary` | None | Clears all stops from the active itinerary. |
+| `POST` | `/api/ai-plan` | `{ city, days, theme, pace }` | Invokes the AI inference engine to synthesize a multi-day itinerary. |
+
+---
+
+## Database Configuration (Supabase)
+
+To link an external Supabase PostgreSQL instance:
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. Open the **SQL Editor** in your Supabase dashboard and run the following script:
+2. Execute the following schema in the Supabase **SQL Editor**:
 
 ```sql
 CREATE TABLE IF NOT EXISTS public.itinerary_items (
@@ -126,76 +277,100 @@ ALTER TABLE public.itinerary_items ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Public Access" ON public.itinerary_items FOR ALL USING (true);
 ```
 
-3. Add your Supabase credentials to `.env.local`:
+3. Populate `.env.local` with the target credentials:
+
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
-OPENROUTER_API_KEY=your-openrouter-key-here
 ```
 
-*(Note: If no Supabase credentials are provided, TripWise automatically utilizes its built-in local store so the app operates with 100% functionality out of the box).*
+*Note: If database credentials are not configured, TripWise automatically operates in resilient local storage mode, ensuring full offline functionality.*
 
 ---
 
-## 🚀 Getting Started Locally
+## Environment Configuration
 
-### 1. Clone the repository
+Configure the application by creating a `.env.local` file in the root directory based on `.env.example`:
+
+| Variable | Requirement | Description |
+| :--- | :--- | :--- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Optional | Supabase Project URL for relational itinerary persistence. |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Optional | Supabase anonymous public API key. |
+| `OPENROUTER_API_KEY` | Optional | OpenRouter API Key (Alternative 1 for AI planner). |
+| `NVIDIA_API_KEY` | Optional | NVIDIA NIM API Key (Alternative 2 for AI planner). |
+| `GEOAPIFY_API_KEY` | Optional | Places API key for supplementary geographic lookups. |
+
+---
+
+## Local Development & Build Verification
+
+### 1. Prerequisites
+- Node.js version 18.18+ or 20+
+- npm version 9+
+
+### 2. Installation
 ```bash
-git clone <repo-url>
+git clone <repository-url>
 cd tripwise
-```
-
-### 2. Install dependencies
-```bash
 npm install
 ```
 
-### 3. Run the development server
+### 3. Development Server
 ```bash
 npm run dev
 ```
+Navigate to [http://localhost:3000](http://localhost:3000) to view the application.
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-### 4. Build and Verify
+### 4. Code Quality & Build Verification
 ```bash
+# Verify TypeScript strict type-checking
 npx tsc --noEmit
+
+# Execute ESLint verification
 npm run lint
+
+# Compile production build
 npm run build
 ```
 
 ---
 
-## 📸 Automated Screenshot Capture
+## Automated Verification & Artifacts
 
-High-resolution screenshots for the submission PDF are automatically captured using Playwright across desktop (1360px) and mobile (390px) viewports:
+TripWise includes an automated Playwright visual testing script (`scripts/screenshots.ts`) that launches the production build and captures comprehensive desktop (1360x900) and mobile (390x844) viewport screenshots into `/screenshots`:
 
 ```bash
-# Ensure server is running on port 3000
+# Start production server
 npm run build
 npm run start -- -p 3000
 
-# In another terminal:
+# Run automated screenshot capture
 npx tsx scripts/screenshots.ts
 ```
 
-Saved screenshots in `/screenshots`:
-- `discover.png` — Hero bento, 3D toon globe, stats count-up
-- `search-results.png` — Filtered search results
-- `filtered-by-category.png` — Category chip active filtering
-- `empty-results.png` — Graceful empty state with reset button
-- `place-sheet.png` — Slide-in place drawer with Open-Meteo live weather
-- `ai-planner-result.png` — Multi-day AI plan with timeline & pack/eat tips
-- `trip-populated.png` — Day-by-day stops, budget card, transit routes
-- `trip-empty.png` — Animated 3D walking Fox mascot
-- `dark-mode.png` — High-contrast dark theme
-- `discover-mobile.png`, `place-sheet-mobile.png`, `trip-mobile.png` — Responsive mobile layout
+### Generated Visual Artifacts
+
+| Filename | Viewport | Scope & Features Captured |
+| :--- | :--- | :--- |
+| `discover.png` | Desktop | Hero bento, self-drawing SVG squiggles, 3D interactive toon globe, live stats count-up. |
+| `search-results.png` | Desktop | Debounced search query results across destinations catalog. |
+| `filtered-by-category.png` | Desktop | Hierarchical country and category chip active states. |
+| `empty-results.png` | Desktop | Empty state UI with graceful fallback and search reset trigger. |
+| `place-sheet.png` | Desktop | Slide-in drawer with Open-Meteo live weather forecast and bento facts. |
+| `ai-planner-result.png` | Desktop | AI-generated multi-day itinerary with timeline spots and packing recommendations. |
+| `trip-populated.png` | Desktop | Itinerary timeline, live currency conversion, foreign trip buffer, and transit routes. |
+| `trip-empty.png` | Desktop | Interactive Three.js skeletal walking Fox canvas mascot. |
+| `dark-mode.png` | Desktop | High-contrast Neo-Brutalist dark color palette. |
+| `discover-mobile.png` | Mobile (390px) | Single-column responsive layout with fixed bottom navigation bar. |
+| `place-sheet-mobile.png` | Mobile (390px) | Full-width mobile place sheet with meteorological forecast tile. |
+| `trip-mobile.png` | Mobile (390px) | Mobile itinerary view with budget tracking and currency conversion. |
 
 ---
 
-## 📜 Attributions & Licenses
+## Third-Party Attributions & Licensing
 
-- **Weather Data:** [Open-Meteo](https://open-meteo.com/) (Licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/))
-- **Flamingo 3D Model:** [three.js examples](https://github.com/mrdoob/three.js) (mrdoob)
-- **Fox 3D Model:** Character model by PixelMannen (CC0), rigging & walk animation by @tomkranis ([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)), via the [Khronos glTF Sample Models](https://github.com/KhronosGroup/glTF-Sample-Models).
-- **Map Links:** [OpenStreetMap](https://www.openstreetmap.org/)
+- **Meteorological Data:** Provided by [Open-Meteo](https://open-meteo.com/), licensed under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
+- **Foreign Exchange Rates:** Provided by [Open Exchange Rates](https://open.er-api.com/).
+- **Geographic Data:** Map references courtesy of [OpenStreetMap](https://www.openstreetmap.org/) contributors (ODbL).
+- **Flamingo 3D Model:** Distributed by [three.js](https://github.com/mrdoob/three.js) (mrdoob).
+- **Fox 3D Model:** Low-poly character model by PixelMannen (CC0), rigging and animation by @tomkranis ([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)), sourced from the [Khronos glTF Sample Models](https://github.com/KhronosGroup/glTF-Sample-Models).
