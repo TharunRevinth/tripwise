@@ -41,11 +41,16 @@
 - **1-Click Add:** Add individual spots or an entire day into your itinerary, automatically matching known coordinates and tags.
 - Curated **"Pack this"** checklist and **"Eat this"** local delicacy recommendations.
 
-### 4. My Trip Itinerary & Route Estimator
+### 4. My Trip Itinerary, Live Currency Converter & Route Estimator
 - **Day-by-Day Timeline:** Stops grouped by day with optional calendar dates derived from trip start date.
-- **Interactive Stop Cards:** Thumbnail, title, editable notes (auto-PATCH on change), day selector, cost per person, and animated "VISITED" stamp with strike-through.
+- **Interactive Stop Cards:** Thumbnail, title, editable notes (auto-PATCH on change), day selector, cost per person with live currency preview, and animated "VISITED" stamp with strike-through.
 - **3D Walking Fox Mascot:** Rendered in Three.js WebGL canvas with skeletal bone walk animation when the trip is empty.
-- **Live Budget Calculator:** Computes total and per-person costs with USD ($) and INR (₹ at 84/$), dynamic progress bar turning red when exceeding budget, and over/under budget advisory.
+- **Live Currency Converter & Foreign Trip Variance Buffer:**
+  - Real-time exchange rates via `/api/currency` (Open Exchange Rates API, 1-hour cache, resilient fallback).
+  - Multi-currency support: USD (`$`), INR (`₹`), EUR (`€`), GBP (`£`), JPY (`¥`), AED (`AED`), SGD (`S$`), THB (`฿`), IDR (`Rp`), AUD (`A$`), CAD (`C$`), CHF (`CHF`).
+  - **Foreign Trip Buffer (±%):** Dynamic toggles (`±0%`, `±5%`, `±10%`, `±15%`) providing realistic estimate ranges to cover credit card foreign transaction fees (2–3%), seasonal FX swings, and unexpected expenses.
+  - Live FX status indicator (`● Live FX` / `○ Offline FX`).
+- **Live Budget Calculator:** Dynamic progress bar turning red when exceeding budget, and over/under budget advisory.
 - **Multi-Modal Transit Route Estimator:** Haversine distance calculation between consecutive stops comparing:
   - 🚶 **Walk:** Free (for distances $\le 5$ km)
   - 🚕 **Cab:** Estimated vehicle cost per group
@@ -53,7 +58,7 @@
   - 🚆 **Train:** Intercity rail travel
   - ✈️ **Flight:** Long-haul travel ($\ge 250$ km)
 - Preference switch (*Cheapest*, *Balanced*, *Fastest*) with recommended mode highlighted.
-- Plain-text trip export (`.txt`) and trip reset confirmation.
+- Plain-text trip export (`.txt`) with selected currency breakdown and trip reset confirmation.
 
 ---
 
@@ -65,9 +70,9 @@
 | **Styling & Design System** | Pure CSS Tokens & Neo-Brutalist Bento System (`--cv`, `--pp`, `--ink`, `--tom`, `--sun`, `--mint`, `--sky`, `--pink`, `--lil`), zero external component libraries |
 | **Typography** | `next/font/google`: Bricolage Grotesque (display), Instrument Sans (body), Caveat (handwritten accents) |
 | **3D Graphics** | Three.js (`three` + `GLTFLoader`), equirectangular water/land projection, GLTF skeletal animations |
-| **Backend & APIs** | Next.js API Routes (`/api/destinations`, `/api/itinerary`, `/api/weather`, `/api/ai-plan`) |
+| **Backend & APIs** | Next.js API Routes (`/api/destinations`, `/api/itinerary`, `/api/weather`, `/api/ai-plan`, `/api/currency`) |
 | **Database** | **Supabase** (PostgreSQL) via `@supabase/supabase-js` with automatic resilient local storage fallback |
-| **External APIs** | **Open-Meteo API** (Live Weather, zero-config), **OpenRouter AI** (Multi-day itinerary generation) |
+| **External APIs** | **Open-Meteo API** (Live Weather, zero-config), **Open Exchange Rates** (Live FX rates), **OpenRouter AI / NVIDIA NIM** (Multi-day itinerary generation) |
 | **Testing & Assets** | Playwright (`scripts/screenshots.ts`) |
 
 ---
@@ -78,15 +83,16 @@ All API responses follow the standard JSON envelope: `{ success: boolean, data?:
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | `/api/destinations` | Search and filter destinations (`city`, `category`, `search`, `sortBy`). |
+| `GET` | `/api/destinations` | Search and filter destinations (`country`, `city`, `category`, `search`, `sortBy`). |
 | `GET` | `/api/destinations/[id]` | Fetch single destination with real-time Open-Meteo weather. |
 | `GET` | `/api/weather` | Live weather forecast from Open-Meteo (`lat`, `lon`, `city`). |
+| `GET` | `/api/currency` | Live exchange rates and fallback matrix (`USD`, `INR`, `EUR`, `GBP`, `JPY`, etc.). |
 | `GET` | `/api/itinerary` | Retrieve all saved itinerary items from Supabase / local persistence. |
 | `POST` | `/api/itinerary` | Add a place to the itinerary with day assignment, cost, and notes. |
 | `PATCH` | `/api/itinerary/[id]` | Update itinerary item (`isVisited`, `dayNumber`, `notes`, `estimatedCost`). |
 | `DELETE` | `/api/itinerary/[id]` | Remove a single item from the itinerary. |
 | `DELETE` | `/api/itinerary` | Clear all stops from the itinerary. |
-| `POST` | `/api/ai-plan` | Generate customized multi-day itinerary via OpenRouter AI. |
+| `POST` | `/api/ai-plan` | Generate customized multi-day itinerary via OpenRouter or NVIDIA NIM. |
 
 ---
 

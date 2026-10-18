@@ -19,6 +19,36 @@ interface TripViewProps {
   showToast: (m: string) => void;
 }
 
+const SUPPORTED_CURRENCIES = [
+  { code: 'USD', symbol: '$', label: 'US Dollar' },
+  { code: 'INR', symbol: '₹', label: 'Indian Rupee' },
+  { code: 'EUR', symbol: '€', label: 'Euro' },
+  { code: 'GBP', symbol: '£', label: 'British Pound' },
+  { code: 'JPY', symbol: '¥', label: 'Japanese Yen' },
+  { code: 'AED', symbol: 'AED ', label: 'UAE Dirham' },
+  { code: 'SGD', symbol: 'S$', label: 'Singapore Dollar' },
+  { code: 'THB', symbol: '฿', label: 'Thai Baht' },
+  { code: 'IDR', symbol: 'Rp ', label: 'Indonesian Rupiah' },
+  { code: 'AUD', symbol: 'A$', label: 'Australian Dollar' },
+  { code: 'CAD', symbol: 'C$', label: 'Canadian Dollar' },
+  { code: 'CHF', symbol: 'CHF ', label: 'Swiss Franc' },
+];
+
+const DEFAULT_RATES: Record<string, number> = {
+  USD: 1.0,
+  INR: 86.8,
+  EUR: 0.92,
+  GBP: 0.78,
+  JPY: 153.5,
+  AED: 3.67,
+  SGD: 1.34,
+  THB: 35.8,
+  IDR: 15850.0,
+  AUD: 1.54,
+  CAD: 1.39,
+  CHF: 0.88,
+};
+
 const EM: Record<string, string> = {
   Historical: '🏛️',
   Nature: '🌿',
@@ -45,7 +75,6 @@ const hr = (h: number) => {
 };
 
 const money = (n: number) => '$' + Math.round(n).toLocaleString('en-US');
-const inr = (n: number) => '₹' + Math.round(n * 84).toLocaleString('en-IN');
 
 const MODES = {
   walk: { n: 'Walk', e: '🚶', t: (d: number) => d / 5, c: () => 0, ok: (d: number) => d <= 5, v: false },
@@ -79,18 +108,42 @@ export default function TripView({
   onGoToPlan,
   showToast,
 }: TripViewProps) {
+  // Live Currency state
+  const [rates, setRates] = useState<Record<string, number>>(DEFAULT_RATES);
+  const [isLiveRates, setIsLiveRates] = useState<boolean>(false);
+
   // Trip Settings stored in localStorage
   const [settings, setSettings] = useState<{
     trav: number;
     pref: 'cheapest' | 'balanced' | 'fastest';
     budget: number;
     start: string;
+    currency: string;
+    variance: number;
   }>({
     trav: 2,
     pref: 'balanced',
     budget: 1500,
     start: '',
+    currency: 'USD',
+    variance: 10,
   });
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/currency')
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled && data.success && data.rates) {
+          setRates(data.rates);
+          setIsLiveRates(Boolean(data.isLive));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     try {
@@ -107,6 +160,18 @@ export default function TripView({
       localStorage.setItem('tw_s', JSON.stringify(updated));
       return updated;
     });
+  };
+
+  const fmt = (n: number, overrideCurr?: string) => {
+    const c = overrideCurr || settings.currency || 'USD';
+    const rate = rates[c] || DEFAULT_RATES[c] || 1;
+    const val = n * rate;
+    const curInfo = SUPPORTED_CURRENCIES.find((x) => x.code === c);
+    const sym = curInfo ? curInfo.symbol : `${c} `;
+    if (c === 'INR') {
+      return `${sym}${Math.round(val).toLocaleString('en-IN')}`;
+    }
+    return `${sym}${Math.round(val).toLocaleString('en-US')}`;
   };
 
   if (!trip || trip.length === 0) {
@@ -205,12 +270,18 @@ export default function TripView({
   const dayOptions = Array.from({ length: Math.max(maxDay + 1, 5) }, (_, i) => i + 1);
 
   const handleExportPlan = () => {
-    let text = 'TripWise plan\n';
+    let text = `TripWise plan (${settings.currency})\n`;
     sortedTrip.forEach((y) => {
       text += `\nDay ${y.dayNumber ?? y.day ?? 1}: ${y.name}, ${y.city}${
         y.notes ? ' - ' + y.notes : ''
-      } (${money(Number(y.estimatedCost) || 0)} pp)`;
+      } (${fmt(Number(y.estimatedCost) || 0)} pp)`;
     });
+    text += `\n\nTotal estimated cost: ${fmt(totalCost)} (${settings.trav} travellers)`;
+    if ((settings.variance ?? 10) > 0) {
+      text += `\nEstimated foreign range (±${settings.variance}%): ${fmt(
+        totalCost * (1 - (settings.variance ?? 10) / 100)
+      )} – ${fmt(totalCost * (1 + (settings.variance ?? 10) / 100))}`;
+    }
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
     a.download = 'tripwise-plan.txt';
@@ -243,7 +314,7 @@ export default function TripView({
                   <div className="dh">
                     <h3>Day {dayNum}</h3>
                     <span>{formatDateForDay(dayNum)}</span>
-                    <em>{money(dayCost)} pp</em>
+                    <em>{fmt(dayCost)} pp</em>
                   </div>
 
                   {dayItems.map((item) => (
@@ -315,6 +386,11 @@ export default function TripView({
                               }
                             }}
                           />
+                          {settings.currency !== 'USD' && (
+                            <span style={{ fontSize: 10, color: 'var(--mu)', marginTop: 2 }}>
+                              ≈ {fmt(item.estimatedCost || 0)}
+                            </span>
+                          )}
                         </label>
 
                         <button
@@ -353,9 +429,26 @@ export default function TripView({
               </div>
             </div>
 
-            {/* Budget Box */}
+            {/* Budget Box with Live Currency and Foreign Variance Buffer */}
             <div className="t sun">
-              <h3>Budget</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <h3 style={{ margin: 0 }}>Budget</h3>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    padding: '2px 8px',
+                    borderRadius: 999,
+                    border: '1.5px solid var(--k)',
+                    background: isLiveRates ? '#3DDC97' : '#FFC400',
+                    color: '#0D0D0D',
+                  }}
+                  title={isLiveRates ? 'Live FX rates via Open Exchange Rates API' : 'Using cached exchange rates'}
+                >
+                  {isLiveRates ? '● Live FX' : '○ Offline FX'}
+                </span>
+              </div>
+
               <div className="pf">
                 <label>
                   Travellers
@@ -380,7 +473,21 @@ export default function TripView({
                   />
                 </label>
 
-                <label style={{ gridColumn: '1/-1' }}>
+                <label>
+                  Currency
+                  <select
+                    value={settings.currency || 'USD'}
+                    onChange={(e) => updateSetting('currency', e.target.value)}
+                  >
+                    {SUPPORTED_CURRENCIES.map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.code} ({c.symbol.trim()}) - {c.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
                   Budget ($)
                   <input
                     type="number"
@@ -391,24 +498,74 @@ export default function TripView({
                 </label>
               </div>
 
+              {/* Foreign Variance Buffer (±%) */}
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--k)' }}>
+                    Foreign trip buffer (±%)
+                  </span>
+                  <span style={{ fontSize: 11, color: 'var(--k)', opacity: 0.85 }}>
+                    Fees & FX swings
+                  </span>
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {[0, 5, 10, 15].map((pct) => (
+                    <button
+                      key={pct}
+                      type="button"
+                      className={`ch ${(settings.variance ?? 10) === pct ? 'on' : ''}`}
+                      style={{ padding: '3px 8px', fontSize: 12, flex: 1, textAlign: 'center' }}
+                      onClick={() => updateSetting('variance', pct)}
+                    >
+                      {pct === 0 ? '±0%' : `±${pct}%`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="rw">
                 <span>Places and tickets</span>
-                <span>{money(activitiesTotal)}</span>
+                <span>{fmt(activitiesTotal)}</span>
               </div>
               <div className="rw">
                 <span>Getting around</span>
-                <span>{money(transitTotal)}</span>
+                <span>{fmt(transitTotal)}</span>
               </div>
               <div className="rw tot">
                 <span>Total</span>
-                <span>{money(totalCost)}</span>
+                <span>{fmt(totalCost)}</span>
               </div>
               <div className="rw">
                 <span>Per person</span>
                 <span>
-                  {money(totalCost / settings.trav)} ({inr(totalCost / settings.trav)})
+                  {fmt(totalCost / settings.trav)}
+                  {settings.currency !== 'INR' && ` (${fmt(totalCost / settings.trav, 'INR')})`}
                 </span>
               </div>
+
+              {/* Variance range estimate */}
+              {(settings.variance ?? 10) > 0 && (
+                <div
+                  style={{
+                    margin: '8px 0',
+                    padding: '8px 10px',
+                    borderRadius: 10,
+                    border: '2px dashed var(--k)',
+                    background: 'rgba(255, 255, 255, 0.45)',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 700 }}>
+                    <span>Est. Range (±{settings.variance}%):</span>
+                    <span>
+                      {fmt(totalCost * (1 - (settings.variance ?? 10) / 100))} –{' '}
+                      {fmt(totalCost * (1 + (settings.variance ?? 10) / 100))}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 11, marginTop: 3, opacity: 0.85, lineHeight: 1.3 }}>
+                    Buffers for card foreign markup fees (2–3%), FX rate shifts & tips.
+                  </div>
+                </div>
+              )}
 
               <div
                 className={`pr ${totalCost > settings.budget ? 'over' : ''}`}
@@ -423,8 +580,8 @@ export default function TripView({
 
               <p style={{ fontWeight: 600, marginTop: 6 }}>
                 {totalCost > settings.budget
-                  ? `About ${money(totalCost - settings.budget)} over budget.`
-                  : `${money(settings.budget - totalCost)} left in the budget.`}
+                  ? `About ${fmt(totalCost - settings.budget)} over budget.`
+                  : `${fmt(settings.budget - totalCost)} left in the budget.`}
               </p>
             </div>
 
@@ -460,7 +617,7 @@ export default function TripView({
                               {MODES[opt.k].e} {MODES[opt.k].n}
                             </span>
                             <span>
-                              {hr(opt.h)}, {opt.cost ? money(opt.cost) : 'free'}
+                              {hr(opt.h)}, {opt.cost ? fmt(opt.cost) : 'free'}
                             </span>
                           </div>
                         );
