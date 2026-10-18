@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import { SEED_DESTINATIONS } from '@/lib/api/destinations';
 
 const FoxMascot = dynamic(() => import('./FoxMascot'), {
   ssr: false,
@@ -77,25 +78,62 @@ const hr = (h: number) => {
 const money = (n: number) => '$' + Math.round(n).toLocaleString('en-US');
 
 const MODES = {
-  walk: { n: 'Walk', e: '🚶', t: (d: number) => d / 5, c: () => 0, ok: (d: number) => d <= 5, v: false },
-  cab: { n: 'Cab', e: '🚕', t: (d: number) => (d * 1.3) / 28, c: (d: number) => 1.5 + 0.7 * d, ok: (d: number) => d <= 400, v: true },
+  walk: {
+    n: 'Walk',
+    e: '🚶',
+    t: (d: number) => d / 4.8,
+    c: () => 0,
+    ok: (d: number) => d <= 4.0,
+    v: false,
+  },
+  rickshaw: {
+    n: 'Auto/TukTuk',
+    e: '🛺',
+    t: (d: number) => (d * 1.25) / 24,
+    c: (d: number) => 1.0 + 0.35 * d,
+    ok: (d: number, a: any) => d <= 25 && ['India', 'Thailand', 'Indonesia'].includes(a?.country),
+    v: true,
+  },
+  metro: {
+    n: 'Metro',
+    e: '🚇',
+    t: (d: number) => (d * 1.15) / 35 + 0.08,
+    c: (d: number) => Math.max(0.6, 0.12 * d),
+    ok: (d: number, a: any, b: any) => d >= 0.8 && d <= 45 && (a?.city === b?.city || a?.country === b?.country),
+    v: false,
+  },
+  cab: {
+    n: 'Cab/Taxi',
+    e: '🚕',
+    t: (d: number) => (d * 1.3) / 28,
+    c: (d: number) => 2.0 + 0.85 * d,
+    ok: (d: number) => d <= 350,
+    v: true,
+  },
   bus: {
     n: 'Bus',
     e: '🚌',
-    t: (d: number) => (d * 1.25) / 40,
-    c: (d: number) => Math.max(0.4, 0.045 * d),
-    ok: (d: number, a: any, b: any) => d >= 1.5 && d <= 1500 && (a.country === b.country || d < 500),
+    t: (d: number) => (d * 1.3) / 35 + 0.1,
+    c: (d: number) => Math.max(0.5, 0.05 * d),
+    ok: (d: number, a: any, b: any) => d >= 1.5 && d <= 1200 && (a?.country === b?.country || d < 400),
     v: false,
   },
   train: {
     n: 'Train',
     e: '🚆',
-    t: (d: number) => (d * 1.2) / 65,
-    c: (d: number) => Math.max(2, 0.03 * d * 1.2),
-    ok: (d: number, a: any, b: any) => d >= 30 && d <= 2500 && a.country === b.country,
+    t: (d: number) => (d * 1.15) / 75 + 0.3,
+    c: (d: number) => Math.max(3.0, 0.045 * d),
+    ok: (d: number, a: any, b: any) => d >= 25 && d <= 2500 && (a?.country === b?.country || d < 800),
     v: false,
   },
-  flight: { n: 'Flight', e: '✈️', t: (d: number) => d / 750 + 3, c: (d: number) => 30 + 0.07 * d, ok: (d: number) => d >= 250, v: false },
+  flight: {
+    n: 'Flight',
+    e: '✈️',
+    t: (d: number) => d / 750 + 2.5,
+    c: (d: number) => 35 + 0.08 * d,
+    ok: (d: number) => d >= 250,
+    v: false,
+  },
 };
 
 export default function TripView({
@@ -128,6 +166,9 @@ export default function TripView({
     currency: 'USD',
     variance: 10,
   });
+
+  // User-selected transport modes per leg (overriding algorithmic defaults)
+  const [customModes, setCustomModes] = useState<Record<string, string>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -206,50 +247,88 @@ export default function TripView({
   const maxDay = Math.max(...sortedTrip.map((t) => t.dayNumber ?? t.day ?? 1), 1);
   const visitedCount = sortedTrip.filter((t) => t.isVisited).length;
 
-  // Calculate routes between stops with coords
-  const stopsWithCoords = sortedTrip
-    .map((t) => ({
-      ...t,
-      lat: t.latitude ?? t.lat,
-      lon: t.longitude ?? t.lon,
-    }))
-    .filter((t) => isFinite(t.lat) && isFinite(t.lon));
+  // Calculate calibrated intra-day routes between stops with coordinates
+  const allLegs: Array<{
+    id: string;
+    dayNumber: number;
+    a: any;
+    b: any;
+    d: number;
+    options: Array<{ k: keyof typeof MODES; h: number; cost: number }>;
+    pick: { k: keyof typeof MODES; h: number; cost: number };
+    isCustom: boolean;
+  }> = [];
 
-  const legs = stopsWithCoords
-    .map((t, i, arr) => {
-      if (i === 0) return null;
-      const prev = arr[i - 1];
-      const d = km(prev, t);
+  for (let dNum = 1; dNum <= maxDay; dNum++) {
+    const dayStops = sortedTrip
+      .filter((t) => (t.dayNumber ?? t.day ?? 1) === dNum)
+      .map((t) => {
+        let lat = Number(t.latitude ?? t.lat);
+        let lon = Number(t.longitude ?? t.lon);
+        if (!isFinite(lat) || !isFinite(lon)) {
+          const match = SEED_DESTINATIONS.find(
+            (s) => s.id === (t.placeId || t.id) || s.name.toLowerCase() === t.name?.toLowerCase()
+          );
+          if (match) {
+            lat = match.latitude;
+            lon = match.longitude;
+          }
+        }
+        return {
+          ...t,
+          lat,
+          lon,
+        };
+      })
+      .filter((t) => isFinite(t.lat) && isFinite(t.lon));
+
+    for (let i = 1; i < dayStops.length; i++) {
+      const prev = dayStops[i - 1];
+      const curr = dayStops[i];
+      // Apply 1.25x road factor (Haversine geodesic under-estimates actual driving by ~20-30%)
+      const rawDist = km(prev, curr);
+      const d = Math.max(0.4, Math.round(rawDist * 1.25 * 10) / 10);
+      const legId = `${prev.id || prev.name}-${curr.id || curr.name}`;
+
       const options = (Object.keys(MODES) as Array<keyof typeof MODES>)
         .map((k) => [k, MODES[k]] as const)
-        .filter(([k, m]) => m.ok(d, prev, t))
+        .filter(([k, m]) => m.ok(d, prev, curr))
         .map(([k, m]) => ({
           k,
           h: m.t(d),
           cost: m.c(d) * (m.v ? Math.ceil(settings.trav / 4) : settings.trav),
         }));
 
-      if (options.length === 0) return null;
+      if (options.length > 0) {
+        const minH = Math.min(...options.map((x) => x.h));
+        const minC = Math.min(...options.map((x) => x.cost));
 
-      const minH = Math.min(...options.map((x) => x.h));
-      const minC = Math.min(...options.map((x) => x.cost));
+        const score = (x: { h: number; cost: number }) => {
+          if (settings.pref === 'fastest') return x.h;
+          if (settings.pref === 'cheapest') return x.cost;
+          return (x.cost + 1) / (minC + 1) + (x.h + 0.05) / (minH + 0.05);
+        };
 
-      const score = (x: { h: number; cost: number }) => {
-        if (settings.pref === 'fastest') return x.h;
-        if (settings.pref === 'cheapest') return x.cost;
-        return (x.cost + 1) / (minC + 1) + (x.h + 0.05) / (minH + 0.05);
-      };
+        const autoPick = [...options].sort((p, q) => score(p) - score(q))[0];
+        const userChoiceKey = customModes[legId] as keyof typeof MODES | undefined;
+        const customPick = userChoiceKey ? options.find((o) => o.k === userChoiceKey) : null;
+        const pick = customPick || autoPick;
 
-      const pick = [...options].sort((p, q) => score(p) - score(q))[0];
-      return { a: prev, b: t, d, options, pick };
-    })
-    .filter(Boolean) as Array<{
-    a: any;
-    b: any;
-    d: number;
-    options: Array<{ k: keyof typeof MODES; h: number; cost: number }>;
-    pick: { k: keyof typeof MODES; h: number; cost: number };
-  }>;
+        allLegs.push({
+          id: legId,
+          dayNumber: dNum,
+          a: prev,
+          b: curr,
+          d,
+          options,
+          pick,
+          isCustom: Boolean(customPick),
+        });
+      }
+    }
+  }
+
+  const legs = allLegs;
 
   const transitTotal = legs.reduce((s, l) => s + l.pick.cost, 0);
   const activitiesTotal =
@@ -607,100 +686,174 @@ export default function TripView({
                     <em>{fmt(dayCost)} pp</em>
                   </div>
 
-                  {dayItems.map((item) => (
-                    <article
-                      key={item.id}
-                      className={`ti ${item.isVisited ? 'done' : ''}`}
-                      data-c={item.category}
-                    >
-                      <div className="th">
-                        {EM[item.category] || '📍'}
-                        {item.imageUrl && (
-                          <img
-                            src={item.imageUrl}
-                            alt=""
-                            onError={(e) => (e.currentTarget.style.display = 'none')}
-                          />
-                        )}
-                      </div>
+                  {dayItems.map((item, itemIdx) => (
+                    <React.Fragment key={item.id}>
+                      <article
+                        className={`ti ${item.isVisited ? 'done' : ''}`}
+                        data-c={item.category}
+                      >
+                        <div className="th">
+                          {EM[item.category] || '📍'}
+                          {item.imageUrl && (
+                            <img
+                              src={item.imageUrl}
+                              alt=""
+                              onError={(e) => (e.currentTarget.style.display = 'none')}
+                            />
+                          )}
+                        </div>
 
-                      <div>
-                        <h4 onClick={() => onOpenSheet(item.placeId || item.id)}>
-                          {item.name}
-                        </h4>
-                        <p>
-                          {item.city}
-                          {item.country ? `, ${item.country}` : ''}
-                        </p>
-                        <input
-                          className="nt"
-                          defaultValue={item.notes || ''}
-                          placeholder="Add a note: timings, tickets, who's coming"
-                          maxLength={280}
-                          aria-label={`Note for ${item.name}`}
-                          onBlur={(e) => {
-                            if (e.target.value !== (item.notes || '')) {
-                              onPatchItem(item.id, { notes: e.target.value.trim() });
-                            }
-                          }}
-                        />
-                      </div>
-
-                      <div className="ct">
-                        <label>
-                          Day
-                          <select
-                            defaultValue={item.dayNumber ?? item.day ?? 1}
-                            onChange={(e) => {
-                              onPatchItem(item.id, { dayNumber: Number(e.target.value) });
-                            }}
-                          >
-                            {dayOptions.map((n) => (
-                              <option key={n} value={n}>
-                                {n}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-
-                        <label>
-                          Cost ($)
+                        <div>
+                          <h4 onClick={() => onOpenSheet(item.placeId || item.id)}>
+                            {item.name}
+                          </h4>
+                          <p>
+                            {item.city}
+                            {item.country ? `, ${item.country}` : ''}
+                          </p>
                           <input
-                            type="number"
-                            min="0"
-                            defaultValue={item.estimatedCost || 0}
+                            className="nt"
+                            defaultValue={item.notes || ''}
+                            placeholder="Add a note: timings, tickets, who's coming"
+                            maxLength={280}
+                            aria-label={`Note for ${item.name}`}
                             onBlur={(e) => {
-                              const val = Number(e.target.value);
-                              if (val >= 0 && val !== item.estimatedCost) {
-                                onPatchItem(item.id, { estimatedCost: val });
+                              if (e.target.value !== (item.notes || '')) {
+                                onPatchItem(item.id, { notes: e.target.value.trim() });
                               }
                             }}
                           />
-                          {settings.currency !== 'USD' && (
-                            <span style={{ fontSize: 10, color: 'var(--mu)', marginTop: 2 }}>
-                              ≈ {fmt(item.estimatedCost || 0)}
+                        </div>
+
+                        <div className="ct">
+                          <label>
+                            Day
+                            <select
+                              defaultValue={item.dayNumber ?? item.day ?? 1}
+                              onChange={(e) => {
+                                onPatchItem(item.id, { dayNumber: Number(e.target.value) });
+                              }}
+                            >
+                              {dayOptions.map((n) => (
+                                <option key={n} value={n}>
+                                  {n}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+
+                          <label>
+                            Cost ($)
+                            <input
+                              type="number"
+                              min="0"
+                              defaultValue={item.estimatedCost || 0}
+                              onBlur={(e) => {
+                                const val = Number(e.target.value);
+                                if (val >= 0 && val !== item.estimatedCost) {
+                                  onPatchItem(item.id, { estimatedCost: val });
+                                }
+                              }}
+                            />
+                            {settings.currency !== 'USD' && (
+                              <span style={{ fontSize: 10, color: 'var(--mu)', marginTop: 2 }}>
+                                ≈ {fmt(item.estimatedCost || 0)}
+                              </span>
+                            )}
+                          </label>
+
+                          <button
+                            className={`vs ${item.isVisited ? 'on' : ''}`}
+                            onClick={() => {
+                              onPatchItem(item.id, { isVisited: !item.isVisited });
+                            }}
+                          >
+                            {item.isVisited ? 'Visited ✓' : 'Mark visited'}
+                          </button>
+
+                          <button
+                            className="rm"
+                            onClick={() => onRemoveItem(item.id)}
+                            aria-label={`Remove ${item.name}`}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </article>
+
+                      {itemIdx < dayItems.length - 1 && (() => {
+                        const nextItem = dayItems[itemIdx + 1];
+                        const leg = legs.find(
+                          (l) =>
+                            l.dayNumber === dayNum &&
+                            (l.a.id === item.id || l.a.name === item.name) &&
+                            (l.b.id === nextItem.id || l.b.name === nextItem.name)
+                        );
+                        if (!leg) return null;
+                        return (
+                          <div
+                            key={`conn-${leg.id}`}
+                            style={{
+                              margin: '6px 0 10px 42px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              padding: '5px 12px',
+                              background: '#FAF5FF',
+                              border: '2px dashed #9333EA',
+                              borderRadius: '10px',
+                              fontSize: '0.84rem',
+                              fontWeight: 600,
+                              color: '#581C87',
+                              flexWrap: 'wrap',
+                            }}
+                          >
+                            <span style={{ fontSize: '1rem' }}>{MODES[leg.pick.k]?.e || '🚗'}</span>
+                            <span>
+                              {MODES[leg.pick.k]?.n || leg.pick.k}: <strong>{hr(leg.pick.h)}</strong> ({leg.d < 10 ? leg.d.toFixed(1) : Math.round(leg.d)} km)
                             </span>
-                          )}
-                        </label>
-
-                        <button
-                          className={`vs ${item.isVisited ? 'on' : ''}`}
-                          onClick={() => {
-                            onPatchItem(item.id, { isVisited: !item.isVisited });
-                          }}
-                        >
-                          {item.isVisited ? 'Visited ✓' : 'Mark visited'}
-                        </button>
-
-                        <button
-                          className="rm"
-                          onClick={() => onRemoveItem(item.id)}
-                          aria-label={`Remove ${item.name}`}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </article>
+                            <span
+                              style={{
+                                color: '#059669',
+                                background: '#ECFDF5',
+                                padding: '2px 8px',
+                                borderRadius: '6px',
+                                border: '1px solid #10B981',
+                                fontWeight: 700,
+                              }}
+                            >
+                              {leg.pick.cost ? fmt(leg.pick.cost) : 'Free'}
+                            </span>
+                            {leg.options.length > 1 && (
+                              <select
+                                value={leg.pick.k}
+                                onChange={(e) => {
+                                  const chosen = e.target.value;
+                                  setCustomModes((prev) => ({ ...prev, [leg.id]: chosen }));
+                                }}
+                                style={{
+                                  marginLeft: '4px',
+                                  padding: '2px 8px',
+                                  fontSize: '0.78rem',
+                                  fontWeight: 700,
+                                  background: '#fff',
+                                  border: '1.5px solid #0D0D0D',
+                                  borderRadius: '6px',
+                                  cursor: 'pointer',
+                                }}
+                                aria-label="Change transit mode"
+                              >
+                                {leg.options.map((opt) => (
+                                  <option key={opt.k} value={opt.k}>
+                                    {MODES[opt.k]?.e} {MODES[opt.k]?.n} · {hr(opt.h)} · {opt.cost ? fmt(opt.cost) : 'Free'}
+                                  </option>
+                                ))}
+                              </select>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </React.Fragment>
                   ))}
                 </div>
               );
@@ -877,14 +1030,27 @@ export default function TripView({
 
             {/* Route Planner Box */}
             <div className="t">
-              <h3>Getting between stops</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 style={{ margin: 0 }}>Getting between stops</h3>
+                {legs.length > 0 && (
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--mu)' }}>
+                    {legs.length} Leg{legs.length > 1 ? 's' : ''} ({fmt(transitTotal)})
+                  </span>
+                )}
+              </div>
+              <p style={{ fontSize: 12, color: 'var(--mu)', margin: '4px 0 10px' }}>
+                Select a profile or click any transport mode to customize individual legs.
+              </p>
               <div className="row">
                 {(['cheapest', 'balanced', 'fastest'] as const).map((pref) => (
                   <button
                     key={pref}
                     type="button"
                     className={`ch ${settings.pref === pref ? 'on' : ''}`}
-                    onClick={() => updateSetting('pref', pref)}
+                    onClick={() => {
+                      updateSetting('pref', pref);
+                      setCustomModes({});
+                    }}
                   >
                     {pref[0].toUpperCase() + pref.slice(1)}
                   </button>
@@ -893,34 +1059,65 @@ export default function TripView({
 
               {legs.length > 0 ? (
                 <div className="lgs">
-                  {legs.map((leg, idx) => (
-                    <div key={idx} className="lgx">
-                      <b>
-                        {leg.a.name} to {leg.b.name},{' '}
-                        {leg.d < 10 ? leg.d.toFixed(1) : Math.round(leg.d)} km
-                      </b>
-                      {leg.options.map((opt, oIdx) => {
-                        const isBest = opt.k === leg.pick.k;
-                        return (
-                          <div key={oIdx} className={`md ${isBest ? 'best' : ''}`}>
-                            <span>
-                              {MODES[opt.k].e} {MODES[opt.k].n}
-                            </span>
-                            <span>
-                              {hr(opt.h)}, {opt.cost ? fmt(opt.cost) : 'free'}
-                            </span>
-                          </div>
-                        );
-                      })}
+                  {legs.map((leg) => (
+                    <div key={leg.id} className="lgx">
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'baseline',
+                          marginBottom: 6,
+                        }}
+                      >
+                        <b style={{ fontSize: 13 }}>
+                          Day {leg.dayNumber}: {leg.a.name} → {leg.b.name}
+                        </b>
+                        <span style={{ fontSize: 11, color: 'var(--mu)', fontWeight: 600 }}>
+                          {leg.d < 10 ? leg.d.toFixed(1) : Math.round(leg.d)} km
+                        </span>
+                      </div>
+                      <div style={{ display: 'grid', gap: 4 }}>
+                        {leg.options.map((opt, oIdx) => {
+                          const isBest = opt.k === leg.pick.k;
+                          return (
+                            <button
+                              key={oIdx}
+                              type="button"
+                              onClick={() => {
+                                setCustomModes((prev) => ({ ...prev, [leg.id]: opt.k }));
+                              }}
+                              className={`md ${isBest ? 'best' : ''}`}
+                              style={{
+                                width: '100%',
+                                textAlign: 'left',
+                                background: isBest ? '#FEF08A' : 'transparent',
+                                border: isBest ? '1.5px solid var(--ink)' : '1px solid transparent',
+                                borderRadius: 6,
+                                padding: '4px 8px',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s ease',
+                              }}
+                              title={`Click to set ${MODES[opt.k]?.n} as transit mode for this leg`}
+                            >
+                              <span>
+                                {MODES[opt.k]?.e} {MODES[opt.k]?.n}
+                              </span>
+                              <span>
+                                {hr(opt.h)}, {opt.cost ? fmt(opt.cost) : 'free'}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   ))}
                   <p className="lo" style={{ marginTop: 8 }}>
-                    Estimates from distance, not live fares.
+                    Calibrated road & transit models. Click any mode above to adjust budget.
                   </p>
                 </div>
               ) : (
                 <p className="lo" style={{ marginTop: 8 }}>
-                  Add two or more stops with a location to compare ways to travel.
+                  Add two or more stops with locations in a day to calculate transit routes.
                 </p>
               )}
             </div>
