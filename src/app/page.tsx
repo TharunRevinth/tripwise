@@ -130,8 +130,46 @@ export default function HomePage() {
   // Initial load
   useEffect(() => {
     fetchAllDestinations();
+
+    // Check if user arrived via a share link (?trip=... or #trip?trip=...)
+    let sharedRaw = '';
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      sharedRaw = searchParams.get('trip') || searchParams.get('share') || '';
+      if (!sharedRaw && window.location.hash.includes('?')) {
+        const hashQuery = window.location.hash.split('?')[1];
+        const hashParams = new URLSearchParams(hashQuery);
+        sharedRaw = hashParams.get('trip') || hashParams.get('share') || '';
+      }
+    }
+
+    if (sharedRaw) {
+      try {
+        const jsonStr = decodeURIComponent(escape(atob(sharedRaw)));
+        const parsed = JSON.parse(jsonStr);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const normalized = parsed.map(ni).sort(byDay);
+          setTrip(normalized);
+          setView('trip');
+          showToast(`Loaded shared trip with ${normalized.length} destinations!`);
+
+          // Persist each destination to the recipient's itinerary
+          for (const item of parsed) {
+            fetch('/api/itinerary', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(item),
+            }).catch(() => {});
+          }
+          return;
+        }
+      } catch (e) {
+        console.warn('Could not decode shared trip payload:', e);
+      }
+    }
+
     fetchTrip();
-  }, [fetchAllDestinations, fetchTrip]);
+  }, [fetchAllDestinations, fetchTrip, showToast]);
 
   // Query destinations whenever filters change (with debounce on search)
   useEffect(() => {
@@ -145,9 +183,9 @@ export default function HomePage() {
   useEffect(() => {
     const handleHash = () => {
       const hash = window.location.hash;
-      if (hash === '#trip') setView('trip');
-      else if (hash === '#plan') setView('plan');
-      else if (hash === '#discover') setView('discover');
+      if (hash.startsWith('#trip')) setView('trip');
+      else if (hash.startsWith('#plan')) setView('plan');
+      else if (hash.startsWith('#discover')) setView('discover');
     };
     handleHash();
     window.addEventListener('hashchange', handleHash);

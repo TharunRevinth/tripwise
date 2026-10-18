@@ -532,6 +532,53 @@ export default function TripView({
     showToast('Plan downloaded');
   };
 
+  const handleShareTrip = async () => {
+    try {
+      const minimal = sortedTrip.map((t) => ({
+        placeId: t.placeId || t.id,
+        name: t.name,
+        city: t.city,
+        country: t.country || '',
+        category: t.category,
+        description: t.description || '',
+        imageUrl: t.imageUrl || '',
+        latitude: t.latitude ?? t.lat,
+        longitude: t.longitude ?? t.lon,
+        dayNumber: t.dayNumber ?? t.day ?? 1,
+        notes: t.notes || '',
+        estimatedCost: Number(t.estimatedCost) || 0,
+        isVisited: Boolean(t.isVisited),
+      }));
+
+      const raw = JSON.stringify(minimal);
+      const encoded = btoa(unescape(encodeURIComponent(raw)));
+      const shareUrl = `${window.location.origin}/#trip?trip=${encoded}`;
+
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        try {
+          await navigator.share({
+            title: 'TripWise Travel Plan',
+            text: `Check out our ${sortedTrip.length}-stop travel plan on TripWise!`,
+            url: shareUrl,
+          });
+          showToast('Trip shared successfully!');
+          return;
+        } catch (shareErr) {
+          // Handled or cancelled
+        }
+      }
+
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(shareUrl);
+        showToast('Share link copied to clipboard! Send it to your peers.');
+      } else {
+        window.prompt('Copy your shareable trip link:', shareUrl);
+      }
+    } catch (err) {
+      showToast('Could not generate share link.');
+    }
+  };
+
   return (
     <section id="trip" className="pg ent">
       <div className="wrap" id="tripc">
@@ -889,21 +936,31 @@ export default function TripView({
                 📄 Export PDF Catalog & Route Map
               </button>
               <button
-                className="btn o sm"
+                className="btn o"
                 type="button"
-                style={{ flex: 1, justifyContent: 'center' }}
-                onClick={handleExportPlan}
-                title="Download plain-text itinerary file"
+                style={{ flex: '1 1 calc(50% - 4px)', justifyContent: 'center' }}
+                onClick={handleShareTrip}
+                title="Generate shareable link for your peers"
               >
-                Download .txt
+                🔗 Share Trip Link
               </button>
               <button
                 className="btn o sm"
                 type="button"
+                style={{ flex: '1 1 calc(25% - 4px)', justifyContent: 'center' }}
+                onClick={handleExportPlan}
+                title="Download plain-text itinerary file"
+              >
+                .txt
+              </button>
+              <button
+                className="btn o sm"
+                type="button"
+                style={{ flex: '1 1 calc(25% - 4px)', justifyContent: 'center' }}
                 onClick={onClearTrip}
                 title="Clear all stops from itinerary"
               >
-                Clear trip
+                Clear
               </button>
             </div>
           </aside>
