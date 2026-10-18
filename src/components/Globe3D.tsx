@@ -51,39 +51,36 @@ export default function Globe3D({ selectedCity = 'All', onSelectCity }: Globe3DP
     const width = container.clientWidth;
     const height = container.clientHeight;
 
-    // Scene, Camera, Renderer
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.z = 240;
+    camera.position.z = 230;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(renderer.domElement);
 
-    // Globe group for rotation
     const globeGroup = new THREE.Group();
     scene.add(globeGroup);
 
-    const radius = 70;
+    const radius = 68;
 
-    // 1. Inner Sphere (Earth Body)
+    // 1. Dark sphere base
     const sphereGeo = new THREE.SphereGeometry(radius, 64, 64);
     const sphereMat = new THREE.MeshPhongMaterial({
-      color: 0x0f172a,
+      color: 0x090d16,
       emissive: 0x0284c7,
-      emissiveIntensity: 0.15,
-      shininess: 40,
-      wireframe: false,
+      emissiveIntensity: 0.1,
+      shininess: 60,
     });
     const globeMesh = new THREE.Mesh(sphereGeo, sphereMat);
     globeGroup.add(globeMesh);
 
-    // 2. Wireframe / Latitude-Longitude Grid Rings
-    const gridMat = new THREE.LineBasicMaterial({
+    // 2. Latitude and Longitude Rings
+    const ringMat = new THREE.LineBasicMaterial({
       color: 0x38bdf8,
       transparent: true,
-      opacity: 0.25,
+      opacity: 0.2,
     });
     for (let lat = -60; lat <= 60; lat += 30) {
       const ringRadius = radius * Math.cos((lat * Math.PI) / 180);
@@ -95,15 +92,39 @@ export default function Globe3D({ selectedCity = 'All', onSelectCity }: Globe3DP
         points.push(new THREE.Vector3(Math.cos(theta) * ringRadius, ringY, Math.sin(theta) * ringRadius));
       }
       ringGeo.setFromPoints(points);
-      const ring = new THREE.Line(ringGeo, gridMat);
+      const ring = new THREE.Line(ringGeo, ringMat);
       globeGroup.add(ring);
     }
 
-    // 3. Atmosphere Outer Glow
-    const glowGeo = new THREE.SphereGeometry(radius * 1.15, 32, 32);
+    // 3. Dot Grid (Points representing globe surface)
+    const dotCount = 1200;
+    const dotPositions = new Float32Array(dotCount * 3);
+    for (let i = 0; i < dotCount; i++) {
+      const phi = Math.acos(-1 + (2 * i) / dotCount);
+      const theta = Math.sqrt(dotCount * Math.PI) * phi;
+      const x = radius * Math.cos(theta) * Math.sin(phi);
+      const y = radius * Math.sin(theta) * Math.sin(phi);
+      const z = radius * Math.cos(phi);
+      dotPositions[i * 3] = x;
+      dotPositions[i * 3 + 1] = y;
+      dotPositions[i * 3 + 2] = z;
+    }
+    const dotGeo = new THREE.BufferGeometry();
+    dotGeo.setAttribute('position', new THREE.BufferAttribute(dotPositions, 3));
+    const dotMat = new THREE.PointsMaterial({
+      color: 0x38bdf8,
+      size: 1.2,
+      transparent: true,
+      opacity: 0.45,
+    });
+    const dotsMesh = new THREE.Points(dotGeo, dotMat);
+    globeGroup.add(dotsMesh);
+
+    // 4. Subtle Outer Atmosphere Glow
+    const glowGeo = new THREE.SphereGeometry(radius * 1.12, 32, 32);
     const glowMat = new THREE.ShaderMaterial({
       uniforms: {
-        glowColor: { value: new THREE.Color(0x38bdf8) },
+        glowColor: { value: new THREE.Color(0x0284c7) },
         viewVector: { value: camera.position },
       },
       vertexShader: `
@@ -112,7 +133,7 @@ export default function Globe3D({ selectedCity = 'All', onSelectCity }: Globe3DP
         void main() {
           vec3 vNormal = normalize(normalMatrix * normal);
           vec3 vNormel = normalize(normalMatrix * viewVector);
-          intensity = pow(0.6 - dot(vNormal, vNormel), 2.0);
+          intensity = pow(0.65 - dot(vNormal, vNormel), 2.2);
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }
       `,
@@ -120,8 +141,7 @@ export default function Globe3D({ selectedCity = 'All', onSelectCity }: Globe3DP
         uniform vec3 glowColor;
         varying float intensity;
         void main() {
-          vec3 glow = glowColor * intensity;
-          gl_FragColor = vec4(glow, intensity * 0.4);
+          gl_FragColor = vec4(glowColor, intensity * 0.35);
         }
       `,
       side: THREE.BackSide,
@@ -131,7 +151,7 @@ export default function Globe3D({ selectedCity = 'All', onSelectCity }: Globe3DP
     const glowMesh = new THREE.Mesh(glowGeo, glowMat);
     globeGroup.add(glowMesh);
 
-    // 4. City Pins (Interactive)
+    // 5. City Pins
     const pinGroup = new THREE.Group();
     globeGroup.add(pinGroup);
 
@@ -139,24 +159,24 @@ export default function Globe3D({ selectedCity = 'All', onSelectCity }: Globe3DP
 
     CITIES.forEach((city) => {
       const pos = latLonToVector3(city.lat, city.lon, radius + 1.2);
+      const isSelected = city.name.toLowerCase() === selectedCity.toLowerCase();
       
-      // Pin Sphere
-      const pinGeo = new THREE.SphereGeometry(2.4, 16, 16);
+      const pinGeo = new THREE.SphereGeometry(isSelected ? 3.0 : 2.2, 16, 16);
       const pinMat = new THREE.MeshBasicMaterial({
-        color: city.name.toLowerCase() === selectedCity.toLowerCase() ? 0xef4444 : 0x38bdf8,
+        color: isSelected ? 0x0284c7 : 0xe0f2fe,
       });
       const pinMesh = new THREE.Mesh(pinGeo, pinMat);
       pinMesh.position.copy(pos);
       pinMesh.userData = { city: city.name };
       pinGroup.add(pinMesh);
 
-      // Outer Pulse Ring
-      const pulseGeo = new THREE.RingGeometry(2.8, 3.8, 24);
+      // Ring around pin
+      const pulseGeo = new THREE.RingGeometry(2.6, 3.4, 24);
       const pulseMat = new THREE.MeshBasicMaterial({
         color: 0x38bdf8,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.6,
+        opacity: isSelected ? 0.9 : 0.4,
       });
       const pulseMesh = new THREE.Mesh(pulseGeo, pulseMat);
       pulseMesh.position.copy(pos.clone().multiplyScalar(1.01));
@@ -167,18 +187,13 @@ export default function Globe3D({ selectedCity = 'All', onSelectCity }: Globe3DP
     });
 
     // Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0x38bdf8, 2.5);
+    const dirLight = new THREE.DirectionalLight(0x38bdf8, 2.0);
     dirLight.position.set(150, 100, 150);
     scene.add(dirLight);
 
-    const backLight = new THREE.DirectionalLight(0x818cf8, 1.5);
-    backLight.position.set(-150, -50, -100);
-    scene.add(backLight);
-
-    // Mouse Interaction / Dragging
     let isDragging = false;
     let previousMousePosition = { x: 0, y: 0 };
     const raycaster = new THREE.Raycaster();
@@ -194,13 +209,11 @@ export default function Globe3D({ selectedCity = 'All', onSelectCity }: Globe3DP
       mouse.x = ((e.clientX - rect.left) / width) * 2 - 1;
       mouse.y = -((e.clientY - rect.top) / height) * 2 + 1;
 
-      // Check pin hover
       raycaster.setFromCamera(mouse, camera);
       const intersects = raycaster.intersectObjects(pinMeshes.map((p) => p.mesh));
 
       if (intersects.length > 0) {
-        const hitCity = intersects[0].object.userData.city;
-        setHoveredCity(hitCity);
+        setHoveredCity(intersects[0].object.userData.city);
         container.style.cursor = 'pointer';
       } else {
         setHoveredCity(null);
@@ -210,33 +223,26 @@ export default function Globe3D({ selectedCity = 'All', onSelectCity }: Globe3DP
       if (isDragging) {
         const deltaX = e.clientX - previousMousePosition.x;
         const deltaY = e.clientY - previousMousePosition.y;
-
         globeGroup.rotation.y += deltaX * 0.005;
         globeGroup.rotation.x += deltaY * 0.005;
-
         previousMousePosition = { x: e.clientX, y: e.clientY };
       }
     };
 
-    const onMouseUp = (e: MouseEvent) => {
+    const onMouseUp = () => {
       if (!isDragging) return;
       isDragging = false;
       container.style.cursor = 'grab';
 
-      // Click pin trigger
       const rect = container.getBoundingClientRect();
-      mouse.x = ((e.clientX - rect.left) / width) * 2 - 1;
-      mouse.y = -((e.clientY - rect.top) / height) * 2 + 1;
       raycaster.setFromCamera(mouse, camera);
       const intersects = raycaster.intersectObjects(pinMeshes.map((p) => p.mesh));
 
-      if (intersects.length > 0) {
-        const cityName = intersects[0].object.userData.city;
-        if (onSelectCity) onSelectCity(cityName);
+      if (intersects.length > 0 && onSelectCity) {
+        onSelectCity(intersects[0].object.userData.city);
       }
     };
 
-    // Touch support for mobile
     const onTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 1) {
         isDragging = true;
@@ -248,10 +254,8 @@ export default function Globe3D({ selectedCity = 'All', onSelectCity }: Globe3DP
       if (isDragging && e.touches.length === 1) {
         const deltaX = e.touches[0].clientX - previousMousePosition.x;
         const deltaY = e.touches[0].clientY - previousMousePosition.y;
-
         globeGroup.rotation.y += deltaX * 0.006;
         globeGroup.rotation.x += deltaY * 0.006;
-
         previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
       }
     };
@@ -267,7 +271,6 @@ export default function Globe3D({ selectedCity = 'All', onSelectCity }: Globe3DP
     window.addEventListener('touchmove', onTouchMove, { passive: true });
     window.addEventListener('touchend', onTouchEnd);
 
-    // Resize Observer
     const handleResize = () => {
       if (!container) return;
       const newW = container.clientWidth;
@@ -278,16 +281,12 @@ export default function Globe3D({ selectedCity = 'All', onSelectCity }: Globe3DP
     };
     window.addEventListener('resize', handleResize);
 
-    // Animation Loop
     let animationId: number;
     const animate = () => {
       animationId = requestAnimationFrame(animate);
-
-      // Slow elegant auto-spin when idle
       if (!isDragging) {
-        globeGroup.rotation.y += 0.002;
+        globeGroup.rotation.y += 0.0018;
       }
-
       renderer.render(scene, camera);
     };
     animate();
@@ -309,37 +308,31 @@ export default function Globe3D({ selectedCity = 'All', onSelectCity }: Globe3DP
   }, [isClient, selectedCity, onSelectCity]);
 
   return (
-    <div className="relative w-full h-[340px] sm:h-[420px] lg:h-[460px] flex items-center justify-center overflow-hidden rounded-3xl bg-radial from-sky-950/40 via-slate-900/60 to-slate-950/90 border border-sky-500/20 shadow-2xl backdrop-blur-xl">
-      {/* 3D Canvas Mount Point */}
+    <div className="relative w-full h-[360px] sm:h-[440px] lg:h-[480px] flex items-center justify-center overflow-hidden rounded-2xl bg-zinc-950 border border-zinc-800/80 shadow-2xl">
       <div ref={containerRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
 
-      {/* Floating Interactive Badge */}
-      <div className="absolute top-4 left-4 pointer-events-none flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/80 border border-sky-500/30 text-xs font-medium text-sky-300 backdrop-blur-md shadow-lg">
-        <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-500"></span>
-        </span>
-        Interactive 3D Earth • Drag to rotate & click city pins
+      {/* Subtle indicator tag without emojis */}
+      <div className="absolute top-4 left-4 pointer-events-none flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-900/90 border border-zinc-800 text-[11px] font-medium tracking-wide text-zinc-400 backdrop-blur-md">
+        <span className="h-1.5 w-1.5 rounded-full bg-sky-400"></span>
+        Interactive 3D Viewport
       </div>
 
-      {/* Hovered City Tooltip */}
       {hoveredCity && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-none px-4 py-2 rounded-xl bg-slate-900/90 border border-sky-400 text-sky-200 text-sm font-semibold shadow-2xl backdrop-blur-md flex items-center gap-2">
-          <span>📍 Click to explore</span>
-          <span className="text-white font-bold">{hoveredCity}</span>
+        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 pointer-events-none px-4 py-2 rounded-xl bg-zinc-900/95 border border-sky-500/50 text-xs font-semibold text-white shadow-2xl backdrop-blur-md">
+          Select destination: <span className="text-sky-400 font-bold">{hoveredCity}</span>
         </div>
       )}
 
-      {/* Quick City Jump Buttons on Globe Overlay */}
-      <div className="absolute bottom-3 right-3 hidden sm:flex flex-wrap gap-1.5 max-w-[280px] justify-end">
+      {/* Clean minimal city selector */}
+      <div className="absolute bottom-4 right-4 hidden sm:flex flex-wrap gap-1.5 max-w-[280px] justify-end">
         {CITIES.map((c) => (
           <button
             key={c.name}
             onClick={() => onSelectCity && onSelectCity(c.name)}
-            className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-all duration-200 border ${
+            className={`px-2.5 py-1 text-[11px] font-medium rounded-lg transition-colors border ${
               selectedCity.toLowerCase() === c.name.toLowerCase()
-                ? 'bg-sky-500 text-white border-sky-400 shadow-md shadow-sky-500/30'
-                : 'bg-slate-900/70 text-slate-300 border-slate-700/60 hover:bg-slate-800 hover:border-sky-500/50'
+                ? 'bg-sky-500 text-white border-sky-400'
+                : 'bg-zinc-900/80 text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700'
             }`}
           >
             {c.name}
