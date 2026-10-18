@@ -42,6 +42,7 @@ export default function HomePage() {
   const [allDestinations, setAllDestinations] = useState<any[]>([]);
   const [trip, setTrip] = useState<any[]>([]);
 
+  const [filterCountry, setFilterCountry] = useState<string>('');
   const [filterCity, setFilterCity] = useState<string>('');
   const [filterCat, setFilterCat] = useState<string>('');
   const [sort, setSort] = useState<string>('rating-desc');
@@ -66,7 +67,7 @@ export default function HomePage() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Fetch all destinations once to derive cities and fallback data
+  // Fetch all destinations once to derive cities, countries, and fallback data
   const fetchAllDestinations = useCallback(async () => {
     try {
       const res = await fetch('/api/destinations?sortBy=rating-desc');
@@ -87,6 +88,7 @@ export default function HomePage() {
     setError(null);
     try {
       const params = new URLSearchParams();
+      if (filterCountry) params.set('country', filterCountry);
       if (filterCity) params.set('city', filterCity);
       if (search.trim()) params.set('search', search.trim());
       if (filterCat) params.set('category', filterCat);
@@ -107,7 +109,7 @@ export default function HomePage() {
     } finally {
       setLoading(false);
     }
-  }, [filterCity, search, filterCat, sort]);
+  }, [filterCountry, filterCity, search, filterCat, sort]);
 
   // Fetch trip
   const fetchTrip = useCallback(async () => {
@@ -152,10 +154,18 @@ export default function HomePage() {
     return () => window.removeEventListener('hashchange', handleHash);
   }, []);
 
-  // Derive unique cities
-  const cities = useMemo(() => {
-    return Array.from(new Set(allDestinations.map((d) => d.city))).filter(Boolean);
+  // Derive unique countries
+  const countries = useMemo(() => {
+    return Array.from(new Set(allDestinations.map((d) => d.country))).filter(Boolean);
   }, [allDestinations]);
+
+  // Derive unique cities (scoped by country if country filter is active)
+  const cities = useMemo(() => {
+    const list = filterCountry
+      ? allDestinations.filter((d) => d.country.toLowerCase() === filterCountry.toLowerCase())
+      : allDestinations;
+    return Array.from(new Set(list.map((d) => d.city))).filter(Boolean);
+  }, [allDestinations, filterCountry]);
 
   // Add place to trip
   const handleAddPlace = async (
@@ -335,6 +345,35 @@ export default function HomePage() {
     }
   };
 
+  // Fly globe to country when country chip is clicked
+  const handleSetFilterCountry = (country: string) => {
+    setFilterCountry(country);
+    if (country) {
+      // If current city is not in this country, clear city
+      const isCurrentCityInCountry = allDestinations.some(
+        (d) =>
+          d.city.toLowerCase() === filterCity.toLowerCase() &&
+          d.country.toLowerCase() === country.toLowerCase()
+      );
+      if (!isCurrentCityInCountry) {
+        setFilterCity('');
+      }
+
+      const countryDest = allDestinations.filter(
+        (d) => d.country.toLowerCase() === country.toLowerCase() && isFinite(d.lat)
+      );
+      if (countryDest.length) {
+        setFlyToPlace({
+          id: null,
+          lat: countryDest.reduce((a, b) => a + b.lat, 0) / countryDest.length,
+          lon: countryDest.reduce((a, b) => a + b.lon, 0) / countryDest.length,
+        });
+      }
+    } else {
+      setFilterCity('');
+    }
+  };
+
   // Fly globe to city when city chip clicked
   const handleSetFilterCity = (city: string) => {
     setFilterCity(city);
@@ -343,6 +382,10 @@ export default function HomePage() {
         (d) => d.city.toLowerCase() === city.toLowerCase() && isFinite(d.lat)
       );
       if (cityDest.length) {
+        // Automatically align country if not set
+        if (!filterCountry || filterCountry.toLowerCase() !== cityDest[0].country.toLowerCase()) {
+          setFilterCountry(cityDest[0].country);
+        }
         setFlyToPlace({
           id: null,
           lat: cityDest.reduce((a, b) => a + b.lat, 0) / cityDest.length,
@@ -362,6 +405,9 @@ export default function HomePage() {
             destinations={destinations}
             allDestinations={allDestinations}
             trip={trip}
+            countries={countries}
+            filterCountry={filterCountry}
+            setFilterCountry={handleSetFilterCountry}
             cities={cities}
             filterCity={filterCity}
             setFilterCity={handleSetFilterCity}
@@ -375,6 +421,7 @@ export default function HomePage() {
             error={error}
             onRetry={queryDestinations}
             onResetFilters={() => {
+              setFilterCountry('');
               setFilterCity('');
               setFilterCat('');
               setSearch('');

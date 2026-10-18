@@ -16,11 +16,14 @@ interface DiscoverViewProps {
   destinations: any[];
   allDestinations: any[];
   trip: any[];
+  countries: string[];
+  filterCountry: string;
+  setFilterCountry: (country: string) => void;
   cities: string[];
   filterCity: string;
-  setFilterCity: (c: string) => void;
+  setFilterCity: (city: string) => void;
   filterCat: string;
-  setFilterCat: (c: string) => void;
+  setFilterCat: (cat: string) => void;
   sort: string;
   setSort: (s: string) => void;
   search: string;
@@ -44,6 +47,15 @@ const EM: Record<string, string> = {
   Culture: '🎨',
 };
 
+const COUNTRY_FLAGS: Record<string, string> = {
+  India: '🇮🇳',
+  Japan: '🇯🇵',
+  France: '🇫🇷',
+  USA: '🇺🇸',
+  Italy: '🇮🇹',
+  Indonesia: '🇮🇩',
+};
+
 const CATS = Object.keys(EM);
 
 const fmtN = (n?: number) =>
@@ -53,6 +65,9 @@ export default function DiscoverView({
   destinations,
   allDestinations,
   trip,
+  countries,
+  filterCountry,
+  setFilterCountry,
   cities,
   filterCity,
   setFilterCity,
@@ -112,7 +127,9 @@ export default function DiscoverView({
     return () => observer.disconnect();
   }, [destinations, loading]);
 
-  const marqueeText = cities.map((c) => `${c} ● `).join('');
+  const marqueeText = (cities.length ? cities : ['Chennai', 'Tokyo', 'Paris', 'New York', 'Rome', 'Kyoto', 'Bali'])
+    .map((c) => `${c} ● `)
+    .join('');
 
   return (
     <section id="discover" className="pg ent">
@@ -131,8 +148,8 @@ export default function DiscoverView({
               </span>
             </h1>
             <p className="lead">
-              Browse real places, check the weather before you commit, then drop them into a day by
-              day plan with costs and routes.
+              Browse authentic places by country &amp; city, check the weather before you commit, then drop
+              them into a day by day plan with costs and routes.
             </p>
             <form
               className="sf"
@@ -145,7 +162,7 @@ export default function DiscoverView({
               <input
                 id="q"
                 type="search"
-                placeholder="Try Chennai, temples, ramen"
+                placeholder="Try Tokyo, temples, ramen, Taj Mahal..."
                 aria-label="Search places"
                 autoComplete="off"
                 value={search}
@@ -198,7 +215,16 @@ export default function DiscoverView({
       {/* Results Section */}
       <div className="wrap" id="results">
         <div className="sh2">
-          <h2>Places worth the trip</h2>
+          <div>
+            <h2>Places worth the trip</h2>
+            <p style={{ color: 'var(--mu)', fontSize: 14, marginTop: 4 }}>
+              {filterCity
+                ? `Showing top destinations in ${filterCity}${filterCountry ? `, ${filterCountry}` : ''}`
+                : filterCountry
+                ? `Showing handpicked highlights across ${filterCountry}`
+                : 'Showing curated destinations worldwide — pick a country to zoom in'}
+            </p>
+          </div>
           <span id="count">
             {loading
               ? 'Loading...'
@@ -206,15 +232,40 @@ export default function DiscoverView({
           </span>
         </div>
 
-        {/* Filters */}
+        {/* Hierarchical Filters: Country -> City -> Category & Sort */}
         <div className="fb">
-          {/* City Chips */}
+          {/* Step 1: Country Filter */}
+          <div className="row" id="countryc">
+            <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.6px', color: 'var(--mu)', minWidth: 70 }}>
+              Country:
+            </span>
+            <button
+              className={`ch ${!filterCountry ? 'on' : ''}`}
+              onClick={() => setFilterCountry('')}
+            >
+              🌐 All countries
+            </button>
+            {countries.map((c) => (
+              <button
+                key={c}
+                className={`ch ${filterCountry === c ? 'on' : ''}`}
+                onClick={() => setFilterCountry(c)}
+              >
+                {COUNTRY_FLAGS[c] || '📍'} {c}
+              </button>
+            ))}
+          </div>
+
+          {/* Step 2: City Filter (Scoped to Country) */}
           <div className="row" id="cityc">
+            <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.6px', color: 'var(--mu)', minWidth: 70 }}>
+              City:
+            </span>
             <button
               className={`ch ${!filterCity ? 'on' : ''}`}
               onClick={() => setFilterCity('')}
             >
-              All cities
+              {filterCountry ? `All in ${filterCountry}` : 'All cities'}
             </button>
             {cities.map((c) => (
               <button
@@ -227,8 +278,11 @@ export default function DiscoverView({
             ))}
           </div>
 
-          {/* Category Chips & Sort Dropdown */}
+          {/* Step 3: Category Chips & Sort Dropdown */}
           <div className="row" id="catc">
+            <span style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.6px', color: 'var(--mu)', minWidth: 70 }}>
+              Category:
+            </span>
             <button
               className={`ch ${!filterCat ? 'on' : ''}`}
               onClick={() => setFilterCat('')}
@@ -283,7 +337,7 @@ export default function DiscoverView({
           {!loading && !error && destinations.length === 0 && (
             <div className="state">
               <h3>Nothing matches that</h3>
-              <p>Try another city or category, or clear the search.</p>
+              <p>Try selecting another country or city, or clear your search keywords.</p>
               <button className="btn" onClick={onResetFilters}>
                 Reset filters
               </button>

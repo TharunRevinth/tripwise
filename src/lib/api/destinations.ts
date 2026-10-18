@@ -335,10 +335,191 @@ export const SEED_DESTINATIONS: Destination[] = [
     tags: ['Sea Temple', 'Sunset', 'Ocean', 'Spiritual'],
     bestTimeToVisit: 'May to September',
     address: 'Beraban, Kediri, Tabanan Regency, Bali 82121'
+  },
+  {
+    id: 'bali-uluwatu-temple',
+    name: 'Uluwatu Cliff Temple & Kecak Dance',
+    city: 'Bali',
+    country: 'Indonesia',
+    category: 'Culture',
+    description: 'Cliffside sea temple perched 70 meters above crashing Indian Ocean surf, world-famous for sunset Kecak fire dance performances against panoramic skies.',
+    imageUrl: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=800&q=80',
+    rating: 4.9,
+    reviewCount: 19800,
+    latitude: -8.8291,
+    longitude: 115.0849,
+    priceLevel: '$$',
+    tags: ['Cliff View', 'Kecak Fire Dance', 'Sunset', 'Culture'],
+    bestTimeToVisit: 'June to August',
+    address: 'Pecatu, South Kuta, Badung Regency, Bali 80361'
+  },
+
+  // --- KYOTO (Japan) ---
+  {
+    id: 'kyoto-fushimi-inari',
+    name: 'Fushimi Inari-taisha Senbon Torii',
+    city: 'Kyoto',
+    country: 'Japan',
+    category: 'Historical',
+    description: 'Breathtaking mountain shrine path flanked by over 10,000 vibrant vermilion torii gates winding up sacred Mount Inari, dedicated to the Shinto deity of harvest.',
+    imageUrl: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=800&q=80',
+    rating: 4.9,
+    reviewCount: 48900,
+    latitude: 34.9671,
+    longitude: 135.7727,
+    priceLevel: '$',
+    tags: ['Torii Gates', 'Shinto Shrine', 'Mountain Trail', 'Iconic Japan'],
+    bestTimeToVisit: 'Early morning or late afternoon',
+    address: '68 Fukakusa Yabunouchicho, Fushimi Ward, Kyoto 612-0882'
+  },
+  {
+    id: 'kyoto-kinkakuji',
+    name: 'Kinkaku-ji (The Golden Pavilion)',
+    city: 'Kyoto',
+    country: 'Japan',
+    category: 'Landmarks',
+    description: 'Zen Buddhist temple with top two floors completely covered in brilliant gold leaf, shimmering majestically above the mirror pond Kyōko-chi in a tranquil moss garden.',
+    imageUrl: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=800&q=80',
+    rating: 4.8,
+    reviewCount: 29500,
+    latitude: 35.0394,
+    longitude: 135.7292,
+    priceLevel: '$',
+    tags: ['Zen Temple', 'Gold Leaf', 'Reflecting Pond', 'UNESCO World Heritage'],
+    bestTimeToVisit: 'October to November (Autumn foliage)',
+    address: '1 Kinkakujicho, Kita Ward, Kyoto 603-8361'
+  },
+  {
+    id: 'kyoto-arashiyama-bamboo',
+    name: 'Arashiyama Bamboo Grove',
+    city: 'Kyoto',
+    country: 'Japan',
+    category: 'Nature',
+    description: 'Towering emerald bamboo stalks whispering in the mountain breeze along a mystical pathway leading to historic zen gardens and the Oi River.',
+    imageUrl: 'https://images.unsplash.com/photo-1528164344705-475426879c0d?auto=format&fit=crop&w=800&q=80',
+    rating: 4.8,
+    reviewCount: 22100,
+    latitude: 35.0169,
+    longitude: 135.6713,
+    priceLevel: '$',
+    tags: ['Bamboo Forest', 'Nature Walk', 'Peaceful', 'Photography'],
+    bestTimeToVisit: 'April to May & October',
+    address: 'Sagatenryuji Ukyoku, Kyoto 616-8385'
+  },
+
+  // --- DELHI & AGRA (India) ---
+  {
+    id: 'agra-taj-mahal',
+    name: 'Taj Mahal & Yamuna Waterfront',
+    city: 'Delhi',
+    country: 'India',
+    category: 'Historical',
+    description: 'An immortal white marble mausoleum commissioned in 1631 by Mughal Emperor Shah Jahan, recognized globally as the pinnacle of Mughal artistic architecture.',
+    imageUrl: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=800&q=80',
+    rating: 5.0,
+    reviewCount: 65000,
+    latitude: 27.1751,
+    longitude: 78.0421,
+    priceLevel: '$$',
+    tags: ['New 7 Wonders', 'Mughal Architecture', 'Marble Masterpiece', 'Sunrise'],
+    bestTimeToVisit: 'October to March (Sunrise visit)',
+    address: 'Dharmapuri, Forest Colony, Tajganj, Agra, Uttar Pradesh 282001'
+  },
+  {
+    id: 'delhi-qutub-minar',
+    name: 'Qutub Minar Complex',
+    city: 'Delhi',
+    country: 'India',
+    category: 'Landmarks',
+    description: 'A soaring 73-meter victory tower of fluted red sandstone and marble built in 1192, surrounded by ancient ruins including the 4th-century rust-resistant Iron Pillar.',
+    imageUrl: 'https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=800&q=80',
+    rating: 4.7,
+    reviewCount: 28400,
+    latitude: 28.5245,
+    longitude: 77.1855,
+    priceLevel: '$',
+    tags: ['UNESCO World Heritage', 'Sandstone Minaret', 'Ancient Ruins', 'Mughal History'],
+    bestTimeToVisit: 'November to February',
+    address: 'Seth Sarai, Mehrauli, New Delhi 110030'
+  },
+
+  // --- ROME & VATICAN EXPANSION ---
+  {
+    id: 'rome-trevi-fountain',
+    name: 'Trevi Fountain & Piazza Navona',
+    city: 'Rome',
+    country: 'Italy',
+    category: 'Landmarks',
+    description: 'The monumental Baroque fountain designed by Nicola Salvi where legend holds tossing a coin over your left shoulder guarantees a return to the Eternal City.',
+    imageUrl: 'https://images.unsplash.com/photo-1515542622106-78bda8ba0e5b?auto=format&fit=crop&w=800&q=80',
+    rating: 4.9,
+    reviewCount: 44200,
+    latitude: 41.9009,
+    longitude: 12.4833,
+    priceLevel: '$',
+    tags: ['Baroque Sculpture', 'Coin Toss', 'Evening Illuminations', 'Historic Square'],
+    bestTimeToVisit: 'Late night or early morning',
+    address: 'Piazza di Trevi, 00187 Roma RM, Italy'
+  },
+  {
+    id: 'rome-pantheon',
+    name: 'The Pantheon of Agrippa',
+    city: 'Rome',
+    country: 'Italy',
+    category: 'Historical',
+    description: 'Nearly 2,000-year-old Roman temple boasting the world’s largest unreinforced concrete dome with its celestial central oculus illuminating marble interiors.',
+    imageUrl: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=80',
+    rating: 4.9,
+    reviewCount: 39100,
+    latitude: 41.8986,
+    longitude: 12.4769,
+    priceLevel: '$',
+    tags: ['Ancient Architecture', 'Concrete Dome', 'Oculus', 'Renaissance Tombs'],
+    bestTimeToVisit: 'Midday when sunbeams pour through the oculus',
+    address: 'Piazza della Rotonda, 00186 Roma RM, Italy'
+  },
+
+  // --- NEW YORK EXPANSION ---
+  {
+    id: 'nyc-brooklyn-bridge',
+    name: 'Brooklyn Bridge & DUMBO Waterfront',
+    city: 'New York',
+    country: 'USA',
+    category: 'Landmarks',
+    description: 'Walk across the historic 1883 neo-Gothic suspension bridge spanning the East River, concluding at DUMBO with postcard views of the Manhattan skyline.',
+    imageUrl: 'https://images.unsplash.com/photo-1496868834840-5f4c98840aaa?auto=format&fit=crop&w=800&q=80',
+    rating: 4.9,
+    reviewCount: 36700,
+    latitude: 40.7061,
+    longitude: -73.9969,
+    priceLevel: '$',
+    tags: ['Suspension Bridge', 'Skyline Vistas', 'Sunset Walk', 'Iconic NYC'],
+    bestTimeToVisit: 'Golden Hour (Sunset)',
+    address: 'Brooklyn Bridge Promenade, New York, NY 10038'
+  },
+
+  // --- PARIS EXPANSION ---
+  {
+    id: 'paris-versailles',
+    name: 'Palace of Versailles & Grand Canal',
+    city: 'Paris',
+    country: 'France',
+    category: 'Historical',
+    description: 'Opulent royal residence of the Sun King Louis XIV, famed for the glittering Hall of Mirrors, ornate King’s State Apartments, and geometrically sculpted fountains.',
+    imageUrl: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=800&q=80',
+    rating: 4.8,
+    reviewCount: 31200,
+    latitude: 48.8049,
+    longitude: 2.1204,
+    priceLevel: '$$$',
+    tags: ['Royal Palace', 'Hall of Mirrors', 'Fountain Gardens', 'Baroque Architecture'],
+    bestTimeToVisit: 'Tuesday to Friday mornings',
+    address: 'Place d\'Armes, 78000 Versailles, France'
   }
 ];
 
 export interface QueryOptions {
+  country?: string;
   city?: string;
   search?: string;
   category?: Category;
@@ -346,7 +527,7 @@ export interface QueryOptions {
 }
 
 export async function fetchDestinations(options: QueryOptions = {}): Promise<Destination[]> {
-  const { city, search, category, sortBy } = options;
+  const { country, city, search, category, sortBy } = options;
 
   let results = [...SEED_DESTINATIONS];
 
@@ -386,6 +567,11 @@ export async function fetchDestinations(options: QueryOptions = {}): Promise<Des
     }
   }
 
+  // Filter by Country
+  if (country && country.toLowerCase() !== 'all') {
+    results = results.filter((d) => d.country.toLowerCase() === country.toLowerCase());
+  }
+
   // Filter by City
   if (city && city.toLowerCase() !== 'all') {
     results = results.filter((d) => d.city.toLowerCase() === city.toLowerCase());
@@ -396,13 +582,14 @@ export async function fetchDestinations(options: QueryOptions = {}): Promise<Des
     results = results.filter((d) => d.category.toLowerCase() === category.toLowerCase());
   }
 
-  // Search keyword across name, description, and tags
+  // Search keyword across name, description, tags, city, and country
   if (search && search.trim() !== '') {
     const q = search.toLowerCase().trim();
     results = results.filter(
       (d) =>
         d.name.toLowerCase().includes(q) ||
         d.city.toLowerCase().includes(q) ||
+        d.country.toLowerCase().includes(q) ||
         d.description.toLowerCase().includes(q) ||
         d.tags.some((tag) => tag.toLowerCase().includes(q))
     );
@@ -425,5 +612,5 @@ export function getDestinationById(id: string): Destination | undefined {
 }
 
 export function getFeaturedCities(): string[] {
-  return ['All', 'Chennai', 'Tokyo', 'Paris', 'New York', 'Rome', 'Bali'];
+  return ['All', 'Chennai', 'Delhi', 'Tokyo', 'Kyoto', 'Paris', 'New York', 'Rome', 'Bali'];
 }
