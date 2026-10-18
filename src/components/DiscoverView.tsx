@@ -54,6 +54,11 @@ const COUNTRY_FLAGS: Record<string, string> = {
   USA: '🇺🇸',
   Italy: '🇮🇹',
   Indonesia: '🇮🇩',
+  'United Kingdom': '🇬🇧',
+  UAE: '🇦🇪',
+  Singapore: '🇸🇬',
+  Thailand: '🇹🇭',
+  Spain: '🇪🇸',
 };
 
 const CATS = Object.keys(EM);
